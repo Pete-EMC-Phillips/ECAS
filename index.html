@@ -24,7 +24,8 @@
     /* categorical slot 1 — used for "in progress" identity (badges, pills) */
     --series-1: #2a78d6; /* blue */
 
-    /* sequential blue ramp — used as an ORDINAL ramp for GRADE/EMC progress (validated, light: node scripts/validate_palette.js "#86b6ef,#3987e5,#1c5cab" --mode light --ordinal) */
+    /* sequential blue ramp — used as an ORDINAL ramp for GRADE/EMC/FUSA/Cyber progress
+       (validated, light: node scripts/validate_palette.js "#86b6ef,#3987e5,#1c5cab" --mode light --ordinal) */
     --seq-250: #86b6ef;
     --seq-400: #3987e5;
     --seq-550: #1c5cab;
@@ -88,11 +89,12 @@
     align-items: center;
     gap: 20px;
     position: sticky; top: 0; z-index: 20;
+    flex-wrap: wrap; row-gap: 8px;
   }
   .brand { display: flex; flex-direction: column; margin-right: 8px; white-space: nowrap; }
   .brand-title { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; }
   .brand-sub { font-size: 11.5px; color: var(--text-muted); }
-  .nav { display: flex; gap: 2px; flex: 1; }
+  .nav { display: flex; gap: 2px; flex: 1; flex-wrap: wrap; }
   .nav button {
     font-family: var(--font); font-size: 13px; font-weight: 550;
     color: var(--text-secondary);
@@ -105,19 +107,21 @@
   .demo-pill {
     font-size: 11px; font-weight: 650; letter-spacing: .03em; text-transform: uppercase;
     color: var(--status-warning); border: 1px solid var(--status-warning);
-    border-radius: 20px; padding: 3px 10px;
+    border-radius: 20px; padding: 3px 10px; white-space: nowrap;
   }
   .theme-toggle {
     border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-secondary);
     border-radius: 7px; padding: 7px 10px; cursor: pointer; font-size: 13px; font-family: var(--font);
+    white-space: nowrap;
   }
   .theme-toggle:hover { color: var(--text-primary); }
+  .theme-toggle.primary { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
 
   main { flex: 1; padding: 22px 28px 60px; max-width: 1360px; width: 100%; margin: 0 auto; }
   .view[hidden] { display: none; }
 
   h1.page-title { font-size: 19px; margin: 0 0 3px; letter-spacing: -0.01em; }
-  p.page-sub { color: var(--text-secondary); margin: 0 0 20px; font-size: 13px; }
+  p.page-sub { color: var(--text-secondary); margin: 0 0 16px; font-size: 13px; }
 
   /* ---------------- Stat tiles ---------------- */
   .stat-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 22px; }
@@ -172,17 +176,32 @@
   .badge .dot.tone-good{background:var(--status-good);} .badge .dot.tone-warning{background:var(--status-warning);}
   .badge .dot.tone-critical{background:var(--status-critical);}
 
-  /* ---------------- Needs-attention table ---------------- */
+  /* ---------------- tables ---------------- */
   table.simple { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   table.simple th {
     text-align: left; font-weight: 600; color: var(--text-muted); font-size: 11px;
     text-transform: uppercase; letter-spacing: .02em; padding: 6px 10px; border-bottom: 1px solid var(--gridline);
+    white-space: nowrap;
   }
   table.simple td { padding: 9px 10px; border-bottom: 1px solid var(--gridline); vertical-align: middle; }
   table.simple tbody tr:hover { background: var(--border); cursor: pointer; }
   table.simple tbody tr:last-child td { border-bottom: none; }
   .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--text-secondary); }
   .cell-sub { color: var(--text-muted); font-size: 11px; }
+  .vlines-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #compTableWrap td.rr-dev-cell { white-space: nowrap; }
+
+  /* ---------------- filters / toggles ---------------- */
+  .filter-row, .vfilter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .filter-row input[type=text], .filter-row select, .vfilter-row input[type=text], .vfilter-row select {
+    font-family: var(--font); font-size: 12.5px; border: 1px solid var(--border-strong);
+    background: var(--surface-2); color: var(--text-primary); border-radius: 7px; padding: 8px 10px;
+  }
+  .filter-row input[type=text] { flex: 1; min-width: 180px; }
+  .result-count { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .toggle-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 550; color: var(--text-secondary); border: 1px solid var(--border-strong); border-radius: 20px; padding: 7px 12px; cursor: pointer; background: var(--surface-2); user-select: none; white-space: nowrap; }
+  .toggle-chip input { margin: 0; }
+  .toggle-chip.on { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
 
   /* ---------------- Vehicle lines view ---------------- */
   .vline-list { display: flex; flex-direction: column; gap: 8px; }
@@ -194,7 +213,6 @@
   .vline-item.active { border-color: var(--series-1); background: color-mix(in srgb, var(--series-1) 6%, var(--surface-1)); }
   .vline-name { font-weight: 600; font-size: 13.5px; }
   .vline-code { font-size: 11.5px; color: var(--text-muted); }
-  .vline-phase-tag { font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .03em; padding: 2px 8px; border-radius: 20px; }
 
   .gate-track { display: flex; align-items: center; margin: 18px 0 8px; }
   .gate-step { flex: 1; text-align: center; position: relative; }
@@ -208,26 +226,17 @@
   .gate-date { font-size: 11px; color: var(--text-muted); }
 
   /* ---------------- Components view ---------------- */
-  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .filter-row input[type=text], .filter-row select {
-    font-family: var(--font); font-size: 12.5px; border: 1px solid var(--border-strong);
-    background: var(--surface-2); color: var(--text-primary); border-radius: 7px; padding: 8px 10px;
-  }
-  .filter-row input[type=text] { flex: 1; min-width: 180px; }
-  .result-count { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-
   .detail-header { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 20px; margin-bottom: 16px; }
   .kv-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin-bottom: 2px; }
   .kv-value { font-size: 13px; font-weight: 550; }
 
-  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--gridline); margin-bottom: 16px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--gridline); margin-bottom: 16px; flex-wrap: wrap; }
   .tab-btn {
     font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-muted);
     background: none; border: none; padding: 9px 4px; margin-right: 18px; cursor: pointer;
     border-bottom: 2px solid transparent; position: relative; top: 1px;
   }
   .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-1); }
-  .tab-panel[hidden] { display: none; }
 
   .vline-pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
   .vline-pill {
@@ -250,6 +259,7 @@
   .subtest-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--gridline); }
   .subtest-code { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; width: 52px; flex: none; }
   .subtest-name { font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .subtest-row select { font-family: var(--font); font-size: 11.5px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); border-radius: 6px; padding: 4px 6px; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
 
@@ -260,10 +270,57 @@
   .roadmap-body { font-size: 12.5px; color: var(--text-secondary); }
 
   footer { text-align: center; padding: 18px; color: var(--text-muted); font-size: 11.5px; }
+
+  /* ---------------- modal ---------------- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(11,11,11,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay[hidden] { display: none; }
+  .modal-card { background: var(--surface-1); border-radius: 12px; padding: 22px 24px; width: 640px; max-width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .modal-card h2 { font-size: 15.5px; margin: 0 0 4px; }
+  .modal-card p.modal-sub { font-size: 12px; color: var(--text-secondary); margin: 0 0 16px; line-height: 1.5; }
+  .modal-card .field { margin-bottom: 12px; display:flex; flex-direction:column; gap:4px; }
+  .modal-card .field label, .field-inline label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); display:block; margin-bottom:3px; }
+  .modal-card .field input[type=text], .modal-card .field input[type=date], .modal-card .field select, .modal-card .field textarea,
+  .field-inline select, .field-inline input[type=text], .field-inline input[type=date] {
+    font-family: var(--font); font-size: 12.5px; color: var(--text-primary); background: var(--page-plane);
+    border: 1px solid var(--border-strong); border-radius: 6px; padding: 8px 9px; width: 100%;
+  }
+  .modal-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--gridline); padding-top: 14px; }
+
+  /* ---------------- pill checks (multi-select) ---------------- */
+  .pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill-check { font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border-strong); color: var(--text-secondary); background: var(--surface-2); user-select:none; }
+  .pill-check.active { background: var(--series-1); color: #fff; border-color: var(--series-1); }
+  .pill-group-label { font-size: 10.5px; text-transform: uppercase; color: var(--text-muted); margin: 10px 0 4px; font-weight:650; }
+
+  /* ---------------- programme tab ---------------- */
+  .pgm-brand { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .pgm-brand-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+  .pgm-brand-name { font-size: 14.5px; font-weight: 650; }
+  .pgm-vline { border: 1px solid var(--gridline); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; background: var(--page-plane); }
+  .pgm-vline-head { display: flex; justify-content: space-between; align-items:center; margin-bottom: 8px; gap: 10px; }
+  .pgm-vline-name { font-weight: 600; font-size: 12.5px; }
+  .pgm-my-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 6px; background: var(--surface-1); border: 1px solid var(--gridline); margin-bottom: 5px; font-size:12px; }
+  .pgm-my-label { font-weight: 650; }
+  .pgm-gates { color: var(--text-muted); font-size: 10.5px; margin-top:2px; }
+  .icon-btn { border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 3px 6px; flex: none; }
+  .icon-btn:hover { color: var(--status-critical); }
+  .link-btn { border: none; background: none; color: var(--series-1); cursor: pointer; font-size: 12px; font-weight: 600; padding: 0; white-space: nowrap; }
+  .link-btn:hover { text-decoration: underline; }
+
+  /* ---------------- ticket page ---------------- */
+  .ticket-notice { font-size: 11.5px; color: var(--text-muted); background: var(--page-plane); border: 1px dashed var(--gridline); border-radius: 7px; padding: 9px 12px; margin-bottom: 16px; }
+  .grade-link-card { display:flex; align-items:center; gap:12px; background: color-mix(in srgb, var(--series-1) 8%, var(--surface-1)); border: 1px solid var(--series-1); border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+  .rr-row, .dev-row { border: 1px solid var(--gridline); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .rr-row-head, .dev-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 </style>
 </head>
 <body class="viz-root">
 <div id="app">
+
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal-card" id="modalBody"></div>
+  </div>
 
   <header class="topbar">
     <div class="brand">
@@ -272,6 +329,7 @@
     </div>
     <nav class="nav" id="nav">
       <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="programme">Programme</button>
       <button data-view="vehicles">Vehicle Lines</button>
       <button data-view="components">Components</button>
       <button data-view="roadmap">Roadmap</button>
@@ -289,7 +347,18 @@
       <h1 class="page-title">Fleet compliance overview</h1>
       <p class="page-sub">GRADE and EMC sign-off status across all tracked vehicle lines and components. Illustrative data — for workflow &amp; layout review only.</p>
 
+      <div class="vfilter-row">
+        <label class="toggle-chip" id="hideSignedOffDashChip"><input type="checkbox" id="hideSignedOffDash" /> Hide signed-off vehicle lines</label>
+      </div>
+
       <div class="stat-row" id="statRow"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">Overall vehicle status</div><div class="card-sub">Next gateway and open-issue summary per vehicle line, most urgent first</div></div>
+        </div>
+        <div id="overallStatusWrap"></div>
+      </div>
 
       <div class="two-col">
         <div class="card">
@@ -311,15 +380,32 @@
       <div class="card">
         <div class="card-head">
           <div><div class="card-title">Needs attention</div><div class="card-sub">Non-compliant EMC results, or GRADE reviews with open issues</div></div>
+          <select id="attentionSort"><option value="due">Sort by due date</option><option value="reason">Sort by reason</option></select>
         </div>
         <div id="attentionTable"></div>
       </div>
     </section>
 
+    <!-- ============ PROGRAMME ============ -->
+    <section id="view-programme" class="view" hidden>
+      <h1 class="page-title">Vehicle programme</h1>
+      <p class="page-sub">Define JLR programme activity — brand, vehicle line, then each model year's programme timing. This feeds the Vehicle Lines tab directly.</p>
+      <div class="vfilter-row">
+        <button class="theme-toggle" id="addBrandBtn">+ Add brand</button>
+      </div>
+      <div id="programmeWrap"></div>
+    </section>
+
     <!-- ============ VEHICLE LINES ============ -->
     <section id="view-vehicles" class="view" hidden>
       <h1 class="page-title">Vehicle lines</h1>
-      <p class="page-sub">Engineering gateway timing and the components fitted to each programme / model year.</p>
+      <p class="page-sub">Engineering gateway timing and the components fitted to each programme / model year. Ordered by next gateway date — the most urgent sits at the top.</p>
+      <div class="vfilter-row">
+        <input type="text" id="vlineSearch" placeholder="Search nameplate or programme…" />
+        <select id="vlineBrandFilter"><option value="">All brands</option></select>
+        <label class="toggle-chip" id="hideSignedOffVlinesChip"><input type="checkbox" id="hideSignedOffVlines" /> Hide signed-off vehicle lines</label>
+        <button class="theme-toggle" id="newVlineBtn" style="margin-left:auto;">+ New vehicle line</button>
+      </div>
       <div class="two-col" style="grid-template-columns: 300px 1fr;">
         <div class="vline-list" id="vlineList"></div>
         <div id="vlineDetail"></div>
@@ -329,7 +415,7 @@
     <!-- ============ COMPONENTS ============ -->
     <section id="view-components" class="view" hidden>
       <h1 class="page-title">Components</h1>
-      <p class="page-sub">Search the component register; open a component to see its GRADE and EMC record.</p>
+      <p class="page-sub">Search the component register; open a component to view its full ticket in a new tab.</p>
 
       <div class="card">
         <div class="filter-row">
@@ -337,12 +423,15 @@
           <select id="filterVline"><option value="">All vehicle lines</option></select>
           <select id="filterGrade"><option value="">Any GRADE status</option></select>
           <select id="filterEmc"><option value="">Any EMC status</option></select>
+          <select id="filterFusa"><option value="">Any FUSA status</option></select>
+          <select id="filterCyber"><option value="">Any Cyber status</option></select>
+        </div>
+        <div class="filter-row">
+          <button class="theme-toggle primary" id="newComponentBtn">+ New component</button>
         </div>
         <div class="result-count" id="compCount"></div>
-        <div id="compTableWrap"></div>
+        <div style="overflow-x:auto;"><div id="compTableWrap"></div></div>
       </div>
-
-      <div class="card" id="compDetailCard" hidden></div>
     </section>
 
     <!-- ============ ROADMAP ============ -->
@@ -353,10 +442,11 @@
         <div class="card-title" style="margin-bottom:12px;">This POC</div>
         <p class="card-sub" style="font-size:12.5px; line-height:1.6;">
           Runs entirely client-side against mock data — no JIRA, no Tableau. Demonstrates the target
-          data model (vehicle line → component → GRADE record + EMC record) and the KPI views this
-          would replace, in one shareable file. Today it is one ticket per GRADE review and one per
-          EMC review, ~40,000 JIRA tickets in total; the target model is one component record, linked
-          to every vehicle line it's fitted to, with GRADE and EMC status tracked directly against it.
+          data model (programme → vehicle line → component → GRADE / EMC / FUSA / Cyber record, plus
+          component-level R&amp;R plans and deviations) and the KPI views this would replace, in one
+          shareable file. Today it is one ticket per GRADE review and one per EMC review, ~40,000 JIRA
+          tickets in total; the target model is one component record, linked to every vehicle line it's
+          fitted to, with every review area tracked directly against it.
         </p>
       </div>
       <div class="card">
@@ -365,7 +455,7 @@
           <div class="roadmap-item"><div class="roadmap-num">1</div><div><div class="roadmap-title">Real data store, not JIRA</div><div class="roadmap-body">Move the repository off JIRA before its March 2029 retirement, onto a proper database with an import path for existing vehicle line and ticket data.</div></div></div>
           <div class="roadmap-item"><div class="roadmap-num">2</div><div><div class="roadmap-title">Bill of materials linkage</div><div class="roadmap-body">Trace BOM entries — starting with semiconductors — into the hardware part number and module tracking, so a component's dependencies are visible, not just its own sign-off.</div></div></div>
           <div class="roadmap-item"><div class="roadmap-num">3</div><div><div class="roadmap-title">Radio type approval</div><div class="roadmap-body">Track type-approval status for components containing transmitters.</div></div></div>
-          <div class="roadmap-item"><div class="roadmap-num">4</div><div><div class="roadmap-title">Functional safety &amp; cyber security</div><div class="roadmap-body">Add sign-off tracking for functional safety and cyber security status alongside GRADE and EMC.</div></div></div>
+          <div class="roadmap-item"><div class="roadmap-num">4</div><div><div class="roadmap-title">Functional safety &amp; cyber security — define the real workflow</div><div class="roadmap-body">FUSA and Cyber tracking now exist as placeholders copied from the GRADE headings; replace with the real classification and evidence workflow once defined.</div></div></div>
           <div class="roadmap-item"><div class="roadmap-num">5</div><div><div class="roadmap-title">Software levels at sign-off</div><div class="roadmap-body">Record the software version used at vehicle sign-off for each component.</div></div></div>
           <div class="roadmap-item"><div class="roadmap-num">6</div><div><div class="roadmap-title">ECE Reg 10 &amp; Reg 155 evidence</div><div class="roadmap-body">Once component, software and BOM data are all under one roof, use it as the evidence base for vehicle-level ECE R10 (EMC) and R155 (cyber security) sign-off.</div></div></div>
         </div>
@@ -379,10 +469,16 @@
 
 <script>
 /* ============================================================
-   MOCK DATA MODEL
+   CONFIG
    ============================================================ */
+// TODO: point this at wherever the GRADE workbook tool ends up hosted (e.g. GitHub Pages).
+// Defaults to a relative link assuming both files sit in the same folder when uploaded.
+const GRADE_WORKBOOK_URL = 'grade-workbook-tool-v11.html';
+const EMC_STANDARD = 'JLR-EMC-CS_Version 4';
 
-// deterministic PRNG so the demo looks the same on every reload
+/* ============================================================
+   MOCK DATA HELPERS
+   ============================================================ */
 function mulberry32(seed) {
   return function() {
     seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -393,7 +489,7 @@ function mulberry32(seed) {
 }
 const rand = mulberry32(20260818);
 function pick(arr) { return arr[Math.floor(rand() * arr.length)]; }
-function pickWeighted(pairs) { // [[value, weight], ...]
+function pickWeighted(pairs) {
   const total = pairs.reduce((s, p) => s + p[1], 0);
   let r = rand() * total;
   for (const [v, w] of pairs) { if ((r -= w) <= 0) return v; }
@@ -402,25 +498,50 @@ function pickWeighted(pairs) { // [[value, weight], ...]
 function randInt(min, max) { return Math.floor(rand() * (max - min + 1)) + min; }
 function fmtDate(d) { return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function addDays(base, days) { const d = new Date(base); d.setDate(d.getDate() + days); return d; }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function badge(label, tone) { return `<span class="badge tone-${tone}"><span class="dot tone-${tone}"></span>${esc(label)}</span>`; }
+function selectOpts(list, current) { return list.map(s => `<option value="${esc(s)}" ${s===current?'selected':''}>${esc(s)}</option>`).join(''); }
+function download(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const TODAY = new Date('2026-08-18');
 
 const GRADE_STAGES = ['Not started', 'Pre Grade', 'Design review Active', 'Production Review Active', 'Complete'];
 const GRADE_COLOR = {
-  'Not started': 'var(--status-neutral)',
-  'Pre Grade': 'var(--seq-250)',
-  'Design review Active': 'var(--seq-400)',
-  'Production Review Active': 'var(--seq-550)',
-  'Complete': 'var(--status-good)',
+  'Not started': 'var(--status-neutral)', 'Pre Grade': 'var(--seq-250)', 'Design review Active': 'var(--seq-400)',
+  'Production Review Active': 'var(--seq-550)', 'Complete': 'var(--status-good)',
 };
 const GRADE_TONE = {
   'Not started': 'neutral', 'Pre Grade': 'progress', 'Design review Active': 'progress',
   'Production Review Active': 'progress', 'Complete': 'good',
 };
+const STAGE_RANK = ['Complete', 'Production Review Active', 'Design review Active', 'Pre Grade', 'Not started'];
+function worstStage(recs, key) {
+  if (!recs.length) return 'Not started';
+  return recs.map(r => r[key].status).sort((a, b) => STAGE_RANK.indexOf(b) - STAGE_RANK.indexOf(a))[0];
+}
+
+// FUSA and Cyber copy the GRADE headings/stages until the real workflow is defined.
+const FUSA_STAGES = GRADE_STAGES, FUSA_COLOR = GRADE_COLOR, FUSA_TONE = GRADE_TONE;
+const CYBER_STAGES = GRADE_STAGES, CYBER_COLOR = GRADE_COLOR, CYBER_TONE = GRADE_TONE;
+const FUSA_NOTES_POOL = [
+  'Functional safety classification under review with the safety team.',
+  'No safety-related functions identified for this component at this design stage.',
+  'ASIL classification pending confirmation from the FUSA lead.',
+];
+const CYBER_NOTES_POOL = [
+  'Cyber security threat assessment not yet started.',
+  'No external connectivity identified; low cyber risk provisionally assumed.',
+  'Awaiting TARA (threat analysis and risk assessment) sign-off.',
+];
 
 const EMC_PLAN_STAGES = ['No Approved EMC test plan', 'EMC test plan under review', 'EMC test plan approved'];
 const EMC_RESULT_STAGES = ['No test results', 'Compliant', 'Non-Compliant', 'Class 2 Acceptance', 'Deviation Approved'];
-// combined status used for dashboard rollups
 function emcOverallStatus(rec) {
   if (rec.resultStatus === 'Compliant') return 'Compliant';
   if (rec.resultStatus === 'Non-Compliant') return 'Non-Compliant';
@@ -432,19 +553,13 @@ function emcOverallStatus(rec) {
 }
 const EMC_OVERALL_ORDER = ['Not started', 'Plan under review', 'Awaiting test results', 'Compliant', 'Class 2 Acceptance', 'Deviation Approved', 'Non-Compliant'];
 const EMC_COLOR = {
-  'Not started': 'var(--status-neutral)',
-  'Plan under review': 'var(--seq-250)',
-  'Awaiting test results': 'var(--seq-400)',
-  'Compliant': 'var(--status-good)',
-  'Class 2 Acceptance': 'var(--status-warning)',
-  'Deviation Approved': 'var(--status-warning)',
-  'Non-Compliant': 'var(--status-critical)',
+  'Not started': 'var(--status-neutral)', 'Plan under review': 'var(--seq-250)', 'Awaiting test results': 'var(--seq-400)',
+  'Compliant': 'var(--status-good)', 'Class 2 Acceptance': 'var(--status-warning)', 'Deviation Approved': 'var(--status-warning)', 'Non-Compliant': 'var(--status-critical)',
 };
 const EMC_TONE = {
   'Not started': 'neutral', 'Plan under review': 'progress', 'Awaiting test results': 'progress',
   'Compliant': 'good', 'Class 2 Acceptance': 'warning', 'Deviation Approved': 'warning', 'Non-Compliant': 'critical',
 };
-
 const EMC_SUBTESTS = [
   ['RE310', 'Radiated RF Emissions'], ['CE420', 'Conducted RF Emissions'],
   ['CI410', 'Conducted Transient Emissions'], ['RI113', 'RF Immunity — Low Band'],
@@ -456,31 +571,83 @@ const EMC_SUBTESTS = [
   ['CI270', 'Immunity to Voltage Overshoot'], ['CI280', 'Electrostatic Discharge'],
   ['CI290', 'Immunity from Continuous Power Line Disturbance'],
 ];
+const RISK_CATEGORIES = ['No Concern', 'Minor Concern', 'Major Concern'];
 
-// ---- vehicle lines (hand-authored so the gateway story reads sensibly against TODAY) ----
-const VEHICLE_LINES = [
-  { id: 'vl1', nameplate: 'Range Rover', my: '25MY', programme: 'L460', systemJudgement: '2022-11-01', designFreeze: '2023-09-15', prodReview: '2024-03-01', signOff: '2024-08-20' },
-  { id: 'vl2', nameplate: 'Range Rover', my: '26MY', programme: 'L460', systemJudgement: '2023-10-01', designFreeze: '2024-08-01', prodReview: '2025-02-15', signOff: '2025-08-25' },
-  { id: 'vl3', nameplate: 'Range Rover Sport', my: '27MY', programme: 'L461', systemJudgement: '2024-05-01', designFreeze: '2025-03-15', prodReview: '2025-11-01', signOff: '2026-06-10' },
-  { id: 'vl4', nameplate: 'Range Rover Sport', my: '28MY', programme: 'L461', systemJudgement: '2025-04-01', designFreeze: '2026-02-15', prodReview: '2026-10-01', signOff: '2027-05-20' },
-  { id: 'vl5', nameplate: 'Defender 110', my: '27MY', programme: 'L663', systemJudgement: '2024-08-01', designFreeze: '2025-06-01', prodReview: '2026-01-15', signOff: '2026-09-30' },
-  { id: 'vl6', nameplate: 'Discovery Sport', my: '26MY', programme: 'L550', systemJudgement: '2023-06-01', designFreeze: '2024-04-01', prodReview: '2024-10-15', signOff: '2025-04-10' },
-  { id: 'vl7', nameplate: 'Range Rover Velar', my: '27MY', programme: 'L560', systemJudgement: '2024-09-01', designFreeze: '2025-07-01', prodReview: '2026-04-01', signOff: '2027-01-15' },
-  { id: 'vl8', nameplate: 'Defender 90', my: '28MY', programme: 'L663', systemJudgement: '2025-09-01', designFreeze: '2026-07-01', prodReview: '2027-02-01', signOff: '2027-11-01' },
-].map(v => {
-  const signOff = new Date(v.signOff);
-  const daysToSignOff = Math.round((signOff - TODAY) / 86400000);
-  let phase, phaseLabel;
-  if (daysToSignOff < 0) { phase = 'signed-off'; phaseLabel = 'Signed off'; }
-  else if (daysToSignOff <= 180) { phase = 'late'; phaseLabel = 'Late programme'; }
-  else if (daysToSignOff <= 540) { phase = 'mid'; phaseLabel = 'Mid programme'; }
-  else { phase = 'early'; phaseLabel = 'Early programme'; }
-  return { ...v, signOffDate: signOff, daysToSignOff, phase, phaseLabel,
-    systemJudgementDate: new Date(v.systemJudgement), designFreezeDate: new Date(v.designFreeze), prodReviewDate: new Date(v.prodReview) };
-});
+/* ============================================================
+   PROGRAMME — brand → vehicle line → model year (feeds VEHICLE_LINES)
+   ============================================================ */
+let PROGRAMME = {
+  brands: [
+    { id: 'b1', name: 'Range Rover', vehicleLines: [
+      { id: 'vlx1', name: 'Range Rover', programmeCode: 'L460', modelYears: [
+        { id: 'vl1', label: '25MY', systemJudgement: '2022-11-01', designFreeze: '2023-09-15', prodReview: '2024-03-01', signOff: '2024-08-20' },
+        { id: 'vl2', label: '26MY', systemJudgement: '2023-10-01', designFreeze: '2024-08-01', prodReview: '2025-02-15', signOff: '2025-08-25' },
+      ]},
+    ]},
+    { id: 'b2', name: 'Range Rover Sport', vehicleLines: [
+      { id: 'vlx2', name: 'Range Rover Sport', programmeCode: 'L461', modelYears: [
+        { id: 'vl3', label: '27MY', systemJudgement: '2024-05-01', designFreeze: '2025-03-15', prodReview: '2025-11-01', signOff: '2026-06-10' },
+        { id: 'vl4', label: '28MY', systemJudgement: '2025-04-01', designFreeze: '2026-02-15', prodReview: '2026-10-01', signOff: '2027-05-20' },
+      ]},
+    ]},
+    { id: 'b3', name: 'Range Rover Velar', vehicleLines: [
+      { id: 'vlx3', name: 'Range Rover Velar', programmeCode: 'L560', modelYears: [
+        { id: 'vl7', label: '27MY', systemJudgement: '2024-09-01', designFreeze: '2025-07-01', prodReview: '2026-04-01', signOff: '2027-01-15' },
+      ]},
+    ]},
+    { id: 'b4', name: 'Range Rover Evoque', vehicleLines: [] },
+    { id: 'b5', name: 'Defender', vehicleLines: [
+      { id: 'vlx4', name: 'Defender 110', programmeCode: 'L663', modelYears: [
+        { id: 'vl5', label: '27MY', systemJudgement: '2024-08-01', designFreeze: '2025-06-01', prodReview: '2026-01-15', signOff: '2026-09-30' },
+      ]},
+      { id: 'vlx5', name: 'Defender 90', programmeCode: 'L663', modelYears: [
+        { id: 'vl8', label: '28MY', systemJudgement: '2025-09-01', designFreeze: '2026-07-01', prodReview: '2027-02-01', signOff: '2027-11-01' },
+      ]},
+      { id: 'vlx6', name: 'Defender 130', programmeCode: 'L663', modelYears: [] },
+      { id: 'vlx7', name: 'Defender Dakar', programmeCode: 'L663', modelYears: [] },
+    ]},
+    { id: 'b6', name: 'Jaguar', vehicleLines: [] },
+    { id: 'b7', name: 'Discovery', vehicleLines: [
+      { id: 'vlx8', name: 'Discovery Sport', programmeCode: 'L550', modelYears: [
+        { id: 'vl6', label: '26MY', systemJudgement: '2023-06-01', designFreeze: '2024-04-01', prodReview: '2024-10-15', signOff: '2025-04-10' },
+      ]},
+    ]},
+  ],
+};
+let brandCounter = 7, vlxCounter = 8, vlCounter = 8;
+
+function flattenProgramme() {
+  const flat = [];
+  PROGRAMME.brands.forEach(b => b.vehicleLines.forEach(vl => vl.modelYears.forEach(my => {
+    const signOff = new Date(my.signOff);
+    const daysToSignOff = Math.round((signOff - TODAY) / 86400000);
+    let phase, phaseLabel;
+    if (daysToSignOff < 0) { phase = 'signed-off'; phaseLabel = 'Signed off'; }
+    else if (daysToSignOff <= 180) { phase = 'late'; phaseLabel = 'Late programme'; }
+    else if (daysToSignOff <= 540) { phase = 'mid'; phaseLabel = 'Mid programme'; }
+    else { phase = 'early'; phaseLabel = 'Early programme'; }
+    flat.push({
+      id: my.id, brandId: b.id, brandName: b.name, vehicleLineDefId: vl.id,
+      nameplate: vl.name, my: my.label, programme: vl.programmeCode || b.name,
+      systemJudgement: my.systemJudgement, designFreeze: my.designFreeze, prodReview: my.prodReview, signOff: my.signOff,
+      signOffDate: signOff, daysToSignOff, phase, phaseLabel,
+      systemJudgementDate: new Date(my.systemJudgement), designFreezeDate: new Date(my.designFreeze), prodReviewDate: new Date(my.prodReview),
+    });
+  })));
+  return flat;
+}
+let VEHICLE_LINES = flattenProgramme();
+function rebuildVehicleLines() { VEHICLE_LINES = flattenProgramme(); }
 const PHASE_TONE = { 'signed-off': 'good', 'late': 'progress', 'mid': 'progress', 'early': 'neutral' };
+function nextGateInfo(vl) {
+  const gates = [['System Judgement', vl.systemJudgementDate], ['Design Freeze', vl.designFreezeDate], ['Production Review', vl.prodReviewDate], ['Vehicle Sign-off', vl.signOffDate]];
+  const upcoming = gates.find(([, d]) => d >= TODAY);
+  return upcoming || gates[gates.length - 1];
+}
 
-// ---- component register ----
+/* ============================================================
+   COMPONENT REGISTER
+   ============================================================ */
 const COMPONENT_TYPES = [
   'Electric Glove Box Latch', 'Tailgate Control Module', 'Seat Heater ECU', 'ADAS Camera Module',
   'Door Latch Actuator', 'HVAC Blower Control', 'Wireless Charging Pad', 'Steering Angle Sensor',
@@ -497,15 +664,14 @@ const COMPONENT_TYPES = [
 const SUPPLIERS = ['Ferrotech Automotive', 'Halcyon Electronics', 'Vantage Systems', 'Ironclad Components', 'Solstice Automotive', 'Meridian Electronics', 'Northgate Automotive', 'Corvus Sensing Systems'];
 const ENGINEERS = ['A. Whitfield', 'S. Okafor', 'M. Lindqvist', 'R. Chandran', 'J. Bostock', 'L. Ferreira', 'D. Marsh', 'H. Dowdy', 'V. Enache', 'K. Novak'];
 const HARDWARE_TYPES = ['BM — Electric Motor (Brushed)', 'MCU — Microcontroller Module', 'PWR — Power Distribution', 'SEN — Sensor Module', 'ACT — Actuator Driver', 'COMMS — Communications Module'];
-const FUNCTIONAL_CLASS = [
-  'Class A — Convenience function', 'Class B — Affects vehicle operation', 'Class C — Safety-related function',
-];
-const RISK_CATEGORIES = ['No Concern', 'Minor Concern', 'Major Concern'];
+const FUNCTIONAL_CLASS = ['Class A — Convenience function', 'Class B — Affects vehicle operation', 'Class C — Safety-related function'];
 const BUILD_STAGES = ['Prototype', 'Pre-Production', 'Production Intent'];
 const PART_PREFIXES = ['T2L2', 'JA9C', 'LR73', 'BJ32', 'GX44', 'HK61'];
-
-function makePartNumber() {
-  return { prefix: pick(PART_PREFIXES), base: String(randInt(100000, 999999)), suffix: pick(['AA', 'AB', 'BA', 'CA']) };
+function makePartNumber() { return { prefix: pick(PART_PREFIXES), base: String(randInt(100000, 999999)), suffix: pick(['AA', 'AB', 'BA', 'CA']) }; }
+function parsePartNumber(raw) {
+  const parts = raw.split('-');
+  if (parts.length >= 3) return { prefix: parts[0], base: parts[1], suffix: parts.slice(2).join('-') };
+  return { prefix: '', base: raw, suffix: '' };
 }
 
 const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
@@ -518,10 +684,34 @@ const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
     packageLocation: pick(['A14 — Lower Fascia', 'B22 — Engine Bay', 'C08 — Tailgate', 'D31 — Headliner', 'E17 — Front Door', 'F02 — Rear Bumper']),
     hardwareType: pick(HARDWARE_TYPES), functionalClass: pick(FUNCTIONAL_CLASS), buildStage: pick(BUILD_STAGES),
     dtNumber: 'DT' + randInt(10000, 99999) + '-' + randInt(1, 9), vehicleLineIds,
+    rrPlans: [], deviations: [],
   };
 });
+let compCounter = COMPONENTS.length;
 
-// ---- GRADE & EMC records: one pair per (component, vehicle line) ----
+COMPONENTS.forEach(c => {
+  if (rand() < 0.25) {
+    c.rrPlans.push({
+      planNumber: 'CF-' + randInt(100000, 999999), area: pick(['GRADE', 'EMC', 'Functional Safety', 'Cyber Security']),
+      description: pick(['Connector sealing rework plan.', 'Software patch validation plan.', 'Supplier corrective action plan.', 'Component re-test following design change.']),
+      closeDate: fmtDate(addDays(TODAY, randInt(14, 180))).replace(/(\d{2}) (\w{3}) (\d{4})/, (m,d,mo,y)=>`${y}-${{'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}[mo]}-${d}`),
+      status: pick(['Open', 'On Track', 'At Risk']),
+    });
+  }
+  if (rand() < 0.15 && c.vehicleLineIds.length) {
+    const nApplicable = randInt(1, c.vehicleLineIds.length);
+    const vlSubset = [...c.vehicleLineIds].sort(() => rand() - 0.5).slice(0, nApplicable);
+    c.deviations.push({
+      deviationNumber: 'DEV-' + randInt(1000, 9999), area: pick(['GRADE', 'EMC']), vehicleLineIds: vlSubset,
+      closeDate: fmtDate(addDays(TODAY, randInt(14, 365))).replace(/(\d{2}) (\w{3}) (\d{4})/, (m,d,mo,y)=>`${y}-${{'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}[mo]}-${d}`),
+      status: pick(['Open', 'Approved - Interim', 'Approved - Permanent']),
+    });
+  }
+});
+
+/* ============================================================
+   GRADE / EMC / FUSA / CYBER RECORDS — one set per (component, vehicle line)
+   ============================================================ */
 function gradeStageForPhase(phase) {
   const dist = {
     'early': [['Not started', 6], ['Pre Grade', 3], ['Design review Active', 1]],
@@ -545,8 +735,17 @@ function subTestResultFor(resultStatus) {
   if (resultStatus === 'Non-Compliant') return pickWeighted([['Non-Compliant', 2], ['Compliant', 5], ['No Test Required', 6]]);
   return pickWeighted([['Compliant', 7], ['No Test Required', 6]]);
 }
+function makeBlankRecord(componentId, vehicleLineId) {
+  return {
+    componentId, vehicleLineId,
+    grade: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: 'STJLR.18.009_Iss11', openIssues: 0, closedIssues: 0, firstReviewDate: null, meetingNotes: '', workbookLocation: '' },
+    emc: { standard: EMC_STANDARD, planStatus: 'No Approved EMC test plan', resultStatus: 'No test results', riskCategory: 'No Concern', documentsAudited: EMC_STANDARD, reviewer: '', subTests: EMC_SUBTESTS.map(([code, name]) => ({ code, name, result: 'No Test Required' })), testReportLocation: '—' },
+    fusa: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: '', reviewer: '', notes: '' },
+    cyber: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: '', reviewer: '', notes: '' },
+  };
+}
 
-const RECORDS = []; // { componentId, vehicleLineId, grade:{...}, emc:{...} }
+const RECORDS = [];
 COMPONENTS.forEach(c => {
   c.vehicleLineIds.forEach(vlId => {
     const vl = VEHICLE_LINES.find(v => v.id === vlId);
@@ -557,8 +756,8 @@ COMPONENTS.forEach(c => {
     RECORDS.push({
       componentId: c.id, vehicleLineId: vlId,
       grade: {
-        status: gradeStage, riskCategory: pick(RISK_CATEGORIES), documentsAudited: 'STJLR.18.009_Iss9',
-        rrPlanNumber: 'CF-' + randInt(100000, 999999), openIssues, closedIssues: randInt(0, 20),
+        status: gradeStage, riskCategory: pick(RISK_CATEGORIES), documentsAudited: 'STJLR.18.009_Iss11',
+        openIssues, closedIssues: randInt(0, 20),
         firstReviewDate: fmtDate(addDays(vl.designFreezeDate, -randInt(30, 200))),
         meetingNotes: pick([
           'Design review held with supplier; component owner confirmed no location change vs prior model year. Awaiting updated BOM evidence.',
@@ -567,29 +766,68 @@ COMPONENTS.forEach(c => {
           'Component owner validated no risk change from prior programme reuse. Closed out as no further action.',
           'Supplier presented test evidence; two open items on connector sealing, tracked to close before Design Freeze.',
         ]),
-        workbookLocation: `\\\\jlrshare\\EE\\GRADE\\${c.name.replace(/\\s+/g, '_')}\\${vl.programme}_Workbook_v${randInt(1,5)}.xlsx`,
+        workbookLocation: `\\\\jlrshare\\EE\\GRADE\\${c.name.replace(/\s+/g, '_')}\\${vl.programme}_Workbook_v${randInt(1,5)}.xlsx`,
       },
       emc: {
-        planStatus, resultStatus, subTests,
+        standard: EMC_STANDARD, planStatus, resultStatus, riskCategory: pick(RISK_CATEGORIES), documentsAudited: EMC_STANDARD, subTests,
         reviewer: pick(ENGINEERS),
         testReportLocation: resultStatus === 'No test results' ? '—' : `https://jlrglobal.sharepoint.com/sites/EEGRADE/Shared%20Documents/EMC/${c.id}_${vl.programme}_TestReport.pdf`,
       },
+      fusa: { status: gradeStageForPhase(vl.phase), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', reviewer: pick(ENGINEERS), notes: pick(FUSA_NOTES_POOL) },
+      cyber: { status: gradeStageForPhase(vl.phase), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', reviewer: pick(ENGINEERS), notes: pick(CYBER_NOTES_POOL) },
     });
   });
 });
 
-function getRecord(componentId, vehicleLineId) { return RECORDS.find(r => r.componentId === componentId && r.vehicleLineId === vehicleLineId); }
-function recordsForComponent(componentId) { return RECORDS.filter(r => r.componentId === componentId); }
-function recordsForVehicleLine(vehicleLineId) { return RECORDS.filter(r => r.vehicleLineId === vehicleLineId); }
+function getRecord(componentId, vehicleLineId) {
+  let r = RECORDS.find(r => r.componentId === componentId && r.vehicleLineId === vehicleLineId);
+  if (!r) { r = makeBlankRecord(componentId, vehicleLineId); RECORDS.push(r); }
+  return r;
+}
+// Only return records for component<->vehicleLine pairings that are currently active (the component
+// hasn't since been unassigned from that vehicle line). Records are kept around rather than deleted on
+// unassign, so re-fitting a component to a vehicle line it was previously on restores its history.
+function recordsForComponent(componentId) {
+  const c = COMPONENTS.find(x => x.id === componentId);
+  if (!c) return [];
+  return RECORDS.filter(r => r.componentId === componentId && c.vehicleLineIds.includes(r.vehicleLineId));
+}
+function recordsForVehicleLine(vehicleLineId) {
+  return RECORDS.filter(r => r.vehicleLineId === vehicleLineId).filter(r => {
+    const c = COMPONENTS.find(x => x.id === r.componentId);
+    return c && c.vehicleLineIds.includes(vehicleLineId);
+  });
+}
+function ensureRecordsForComponent(c) { c.vehicleLineIds.forEach(vlId => getRecord(c.id, vlId)); }
+
+function componentSummary(c) {
+  const recs = recordsForComponent(c.id);
+  const worstGrade = worstStage(recs, 'grade');
+  const worstFusa = worstStage(recs, 'fusa');
+  const worstCyber = worstStage(recs, 'cyber');
+  const emcRank = ['Compliant', 'Deviation Approved', 'Class 2 Acceptance', 'Awaiting test results', 'Plan under review', 'Not started', 'Non-Compliant'];
+  const emcStatuses = recs.map(r => emcOverallStatus(r.emc));
+  const worstEmc = (emcStatuses.length ? emcStatuses : ['Not started']).sort((a, b) => emcRank.indexOf(b) - emcRank.indexOf(a))[0];
+  return { worstGrade, worstEmc, worstFusa, worstCyber, recs };
+}
+function rrPlanCell(c) {
+  if (!c.rrPlans.length) return '<span class="cell-sub">—</span>';
+  const withDates = c.rrPlans.filter(p => p.closeDate);
+  const soonest = withDates.length ? withDates.slice().sort((a, b) => new Date(a.closeDate) - new Date(b.closeDate))[0] : c.rrPlans[0];
+  const extra = c.rrPlans.length > 1 ? ` <span class="cell-sub">+${c.rrPlans.length - 1} more</span>` : '';
+  return `<span class="mono">${esc(soonest.planNumber || '—')}</span>${soonest.closeDate ? `<div class="cell-sub">due ${esc(fmtDate(new Date(soonest.closeDate)))}</div>` : ''}${extra}`;
+}
+function devCell(c) {
+  if (!c.deviations.length) return '<span class="cell-sub">—</span>';
+  const withDates = c.deviations.filter(d => d.closeDate);
+  const soonest = withDates.length ? withDates.slice().sort((a, b) => new Date(a.closeDate) - new Date(b.closeDate))[0] : c.deviations[0];
+  const extra = c.deviations.length > 1 ? ` <span class="cell-sub">+${c.deviations.length - 1} more</span>` : '';
+  return `<span class="mono">${esc(soonest.deviationNumber || '—')}</span>${soonest.closeDate ? `<div class="cell-sub">due ${esc(fmtDate(new Date(soonest.closeDate)))}</div>` : ''}${extra}`;
+}
 
 /* ============================================================
-   SMALL RENDER HELPERS
+   RENDER HELPERS
    ============================================================ */
-function badge(label, tone) {
-  return `<span class="badge tone-${tone}"><span class="dot tone-${tone}"></span>${label}</span>`;
-}
-function esc(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
 function stackedStatusBar(counts, order, colorMap, total) {
   return order.filter(k => counts[k] > 0).map(k => {
     const pct = (counts[k] / total * 100).toFixed(2);
@@ -597,66 +835,105 @@ function stackedStatusBar(counts, order, colorMap, total) {
   }).join('');
 }
 function legendFor(order, colorMap, countsAll) {
-  return order.filter(k => countsAll[k] > 0).map(k =>
-    `<div class="legend-item"><span class="swatch" style="background:${colorMap[k]}"></span>${k} (${countsAll[k]})</div>`
-  ).join('');
+  return order.filter(k => countsAll[k] > 0).map(k => `<div class="legend-item"><span class="swatch" style="background:${colorMap[k]}"></span>${k} (${countsAll[k]})</div>`).join('');
+}
+function statTile(label, value, foot, tone) {
+  return `<div class="stat-tile"><div class="stat-label">${label}</div><div class="stat-value ${tone||''}">${value}</div><div class="stat-foot">${foot}</div></div>`;
 }
 
 /* ============================================================
    DASHBOARD
    ============================================================ */
 function renderDashboard() {
-  const totalComponents = COMPONENTS.length;
-  const totalLines = VEHICLE_LINES.length;
-  const totalRecords = RECORDS.length;
-  const gradeComplete = RECORDS.filter(r => r.grade.status === 'Complete').length;
-  const emcCompliant = RECORDS.filter(r => r.emc.resultStatus === 'Compliant').length;
-  const openIssuesSum = RECORDS.reduce((s, r) => s + r.grade.openIssues, 0);
-  const attention = RECORDS.filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3);
+  const hideSigned = document.getElementById('hideSignedOffDash').checked;
+  document.getElementById('hideSignedOffDashChip').classList.toggle('on', hideSigned);
+  const activeLines = hideSigned ? VEHICLE_LINES.filter(v => v.phase !== 'signed-off') : VEHICLE_LINES;
+  const activeIds = new Set(activeLines.map(v => v.id));
+  const activeRecords = RECORDS.filter(r => activeIds.has(r.vehicleLineId));
 
-  document.getElementById('statRow').innerHTML = `
+  const totalComponents = new Set(activeRecords.map(r => r.componentId)).size;
+  const totalLines = activeLines.length;
+  const totalRecords = activeRecords.length;
+  const gradeComplete = activeRecords.filter(r => r.grade.status === 'Complete').length;
+  const emcCompliant = activeRecords.filter(r => r.emc.resultStatus === 'Compliant').length;
+  const openIssuesSum = activeRecords.reduce((s, r) => s + r.grade.openIssues, 0);
+  const attention = activeRecords.filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3);
+
+  document.getElementById('statRow').innerHTML = totalRecords ? `
     ${statTile('Components tracked', totalComponents.toLocaleString(), totalLines + ' vehicle lines')}
     ${statTile('GRADE + EMC records', totalRecords.toLocaleString(), 'one record per component / vehicle line')}
     ${statTile('GRADE complete', Math.round(gradeComplete / totalRecords * 100) + '%', gradeComplete + ' of ' + totalRecords + ' records', 'good')}
     ${statTile('EMC compliant', Math.round(emcCompliant / totalRecords * 100) + '%', emcCompliant + ' of ' + totalRecords + ' records', 'good')}
     ${statTile('Open GRADE issues', openIssuesSum.toLocaleString(), 'summed across all records')}
     ${statTile('Needs attention', attention.length.toLocaleString(), 'non-compliant or high open-issue count', attention.length ? 'critical' : 'good')}
-  `;
+  ` : `${statTile('Components tracked','0','no vehicle lines shown')}`.repeat(1);
 
-  // GRADE stacked bars, one row per vehicle line
+  document.getElementById('overallStatusWrap').innerHTML = renderOverallStatusTile(activeLines);
+  document.querySelectorAll('#overallStatusWrap tbody tr').forEach(tr => tr.addEventListener('click', () => {
+    selectedVlineId = tr.dataset.vline; setActiveView('vehicles'); refreshVehicleDetail();
+  }));
+
   const gradeAll = {}; GRADE_STAGES.forEach(s => gradeAll[s] = 0);
-  const gradeRows = VEHICLE_LINES.map(vl => {
+  const gradeRows = activeLines.map(vl => {
     const recs = recordsForVehicleLine(vl.id);
     const counts = {}; GRADE_STAGES.forEach(s => counts[s] = 0);
     recs.forEach(r => { counts[r.grade.status]++; gradeAll[r.grade.status]++; });
     return `<div class="stack-row">
-      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${vl.programme}</div></div>
-      <div class="stack-bar">${stackedStatusBar(counts, GRADE_STAGES, GRADE_COLOR, recs.length)}</div>
+      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${esc(vl.programme)}</div></div>
+      <div class="stack-bar">${stackedStatusBar(counts, GRADE_STAGES, GRADE_COLOR, recs.length || 1)}</div>
       <div class="stack-total">${recs.length}</div>
     </div>`;
   }).join('');
-  document.getElementById('gradeStack').innerHTML = gradeRows;
+  document.getElementById('gradeStack').innerHTML = gradeRows || '<div class="empty-state">No vehicle lines to show.</div>';
   document.getElementById('gradeLegend').innerHTML = legendFor(GRADE_STAGES, GRADE_COLOR, gradeAll);
 
-  // EMC stacked bars
   const emcAll = {}; EMC_OVERALL_ORDER.forEach(s => emcAll[s] = 0);
-  const emcRows = VEHICLE_LINES.map(vl => {
+  const emcRows = activeLines.map(vl => {
     const recs = recordsForVehicleLine(vl.id);
     const counts = {}; EMC_OVERALL_ORDER.forEach(s => counts[s] = 0);
     recs.forEach(r => { const st = emcOverallStatus(r.emc); counts[st]++; emcAll[st]++; });
     return `<div class="stack-row">
-      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${vl.programme}</div></div>
-      <div class="stack-bar">${stackedStatusBar(counts, EMC_OVERALL_ORDER, EMC_COLOR, recs.length)}</div>
+      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${esc(vl.programme)}</div></div>
+      <div class="stack-bar">${stackedStatusBar(counts, EMC_OVERALL_ORDER, EMC_COLOR, recs.length || 1)}</div>
       <div class="stack-total">${recs.length}</div>
     </div>`;
   }).join('');
-  document.getElementById('emcStack').innerHTML = emcRows;
+  document.getElementById('emcStack').innerHTML = emcRows || '<div class="empty-state">No vehicle lines to show.</div>';
   document.getElementById('emcLegend').innerHTML = legendFor(EMC_OVERALL_ORDER, EMC_COLOR, emcAll);
 
-  // needs-attention table
-  const rows = attention.slice(0, 12).map(r => {
+  renderAttentionTable(activeRecords);
+}
+
+function renderOverallStatusTile(lines) {
+  if (!lines.length) return '<div class="empty-state">No vehicle lines to show.</div>';
+  const sorted = [...lines].sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
+  const rows = sorted.map(vl => {
+    const recs = recordsForVehicleLine(vl.id);
+    const [gateLabel, gateDate] = nextGateInfo(vl);
+    const gradeOpen = recs.reduce((s, r) => s + r.grade.openIssues, 0);
+    const gradeTotal = recs.reduce((s, r) => s + r.grade.openIssues + r.grade.closedIssues, 0);
+    const emcOpen = recs.reduce((s, r) => s + r.emc.subTests.filter(st => st.result !== 'Compliant' && st.result !== 'No Test Required').length, 0);
+    const emcTotal = recs.reduce((s, r) => s + r.emc.subTests.length, 0);
+    return `<tr data-vline="${vl.id}">
+      <td>${esc(vl.nameplate)} ${vl.my}<div class="cell-sub">${esc(vl.programme)}</div></td>
+      <td>${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}</td>
+      <td>${esc(gateLabel)}<div class="cell-sub">${fmtDate(gateDate)}</div></td>
+      <td>GRADE ${gradeOpen} open of ${gradeTotal}</td>
+      <td>EMC ${emcOpen} open of ${emcTotal}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="simple"><thead><tr><th>Vehicle line</th><th>Programme phase</th><th>Next gateway</th><th>GRADE</th><th>EMC</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderAttentionTable(activeRecords) {
+  const sortBy = document.getElementById('attentionSort').value;
+  let attention = (activeRecords || RECORDS).filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3)
+    .map(r => { const vl = VEHICLE_LINES.find(x => x.id === r.vehicleLineId); return { r, vl, due: nextGateInfo(vl)[1] }; });
+  if (sortBy === 'due') attention.sort((a, b) => a.due - b.due);
+  else attention.sort((a, b) => { const ra = a.r.emc.resultStatus === 'Non-Compliant' ? 0 : 1; const rb = b.r.emc.resultStatus === 'Non-Compliant' ? 0 : 1; return ra - rb || b.r.grade.openIssues - a.r.grade.openIssues; });
+
+  const rows = attention.slice(0, 12).map(({ r, vl, due }) => {
     const c = COMPONENTS.find(x => x.id === r.componentId);
-    const vl = VEHICLE_LINES.find(x => x.id === r.vehicleLineId);
     const reasons = [];
     if (r.emc.resultStatus === 'Non-Compliant') reasons.push(badge('EMC Non-Compliant', 'critical'));
     if (r.grade.openIssues >= 3) reasons.push(badge(r.grade.openIssues + ' open GRADE issues', 'warning'));
@@ -665,53 +942,271 @@ function renderDashboard() {
       <td>${esc(vl.nameplate)} ${vl.my}</td>
       <td>${esc(c.supplier)}</td>
       <td>${reasons.join(' ')}</td>
+      <td>${fmtDate(due)}</td>
     </tr>`;
   }).join('');
   document.getElementById('attentionTable').innerHTML = attention.length ? `
-    <table class="simple">
-      <thead><tr><th>Component</th><th>Vehicle line</th><th>Supplier</th><th>Reason</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Supplier</th><th>Reason</th><th>Due</th></tr></thead><tbody>${rows}</tbody></table>
     ${attention.length > 12 ? `<div class="cell-sub" style="margin-top:8px;">+ ${attention.length - 12} more — see Components view</div>` : ''}
   ` : `<div class="empty-state">Nothing needs attention right now.</div>`;
-  document.querySelectorAll('#attentionTable tbody tr').forEach(tr => {
-    tr.addEventListener('click', () => openComponent(tr.dataset.comp, tr.dataset.vline));
+  document.querySelectorAll('#attentionTable tbody tr').forEach(tr => tr.addEventListener('click', () => openComponentTicket(tr.dataset.comp, tr.dataset.vline)));
+}
+
+/* ============================================================
+   PROGRAMME VIEW
+   ============================================================ */
+function renderProgramme() {
+  const wrap = document.getElementById('programmeWrap');
+  wrap.innerHTML = PROGRAMME.brands.map(b => renderBrandCard(b)).join('');
+  wrap.querySelectorAll('[data-add-vline]').forEach(btn => btn.addEventListener('click', () => addVehicleLineToBrand(btn.dataset.addVline)));
+  wrap.querySelectorAll('[data-add-my]').forEach(btn => btn.addEventListener('click', () => openAddModelYearModal({ brandId: btn.dataset.brand, vehicleLineId: btn.dataset.vline })));
+  wrap.querySelectorAll('[data-del-my]').forEach(btn => btn.addEventListener('click', () => deleteModelYear(btn.dataset.brand, btn.dataset.vline, btn.dataset.my)));
+  wrap.querySelectorAll('[data-del-vline]').forEach(btn => btn.addEventListener('click', () => deleteVehicleLineDef(btn.dataset.brand, btn.dataset.vline)));
+}
+function renderBrandCard(b) {
+  const vlinesHtml = b.vehicleLines.map(vl => renderVlineBlock(b, vl)).join('') || '<div class="empty-state" style="padding:14px;">No vehicle lines yet.</div>';
+  return `<div class="pgm-brand">
+    <div class="pgm-brand-head"><div class="pgm-brand-name">${esc(b.name)}</div><button class="link-btn" data-add-vline="${b.id}">+ Add vehicle line</button></div>
+    ${vlinesHtml}
+  </div>`;
+}
+function renderVlineBlock(b, vl) {
+  const myRows = vl.modelYears.map(my => {
+    const inst = VEHICLE_LINES.find(v => v.id === my.id);
+    return `<div class="pgm-my-row">
+      <div><span class="pgm-my-label">${esc(vl.name)} ${esc(my.label)}</span> ${inst ? badge(inst.phaseLabel, PHASE_TONE[inst.phase]) : ''}
+        <div class="pgm-gates">SJ ${esc(my.systemJudgement)} · DF ${esc(my.designFreeze)} · PR ${esc(my.prodReview)} · SO ${esc(my.signOff)}</div>
+      </div>
+      <button class="icon-btn" data-del-my data-brand="${b.id}" data-vline="${vl.id}" data-my="${my.id}" title="Remove model year">✕</button>
+    </div>`;
+  }).join('') || '<div class="cell-sub" style="padding:6px 2px;">No model years defined yet.</div>';
+  return `<div class="pgm-vline">
+    <div class="pgm-vline-head"><div class="pgm-vline-name">${esc(vl.name)}${vl.programmeCode ? ' · ' + esc(vl.programmeCode) : ''}</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="link-btn" data-add-my data-brand="${b.id}" data-vline="${vl.id}">+ Add model year</button>
+        <button class="icon-btn" data-del-vline data-brand="${b.id}" data-vline="${vl.id}" title="Remove vehicle line">✕</button>
+      </div>
+    </div>
+    ${myRows}
+  </div>`;
+}
+function addBrand() {
+  const overlay = document.getElementById('modalOverlay');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <h2>Add a new brand</h2>
+    <p class="modal-sub">Add a JLR brand or sub-brand to track programme activity under. You can add vehicle lines and model years to it afterwards.</p>
+    <div class="field"><label>Brand name</label><input type="text" id="brandNameInput" placeholder="e.g. Jaguar" /></div>
+    <div class="modal-actions">
+      <button class="theme-toggle" id="modalCancel">Cancel</button>
+      <button class="theme-toggle primary" id="brandCreateBtn">Add brand</button>
+    </div>
+  `;
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('brandCreateBtn').addEventListener('click', () => {
+    const name = document.getElementById('brandNameInput').value.trim();
+    if (!name) { alert('Enter a brand name.'); return; }
+    PROGRAMME.brands.push({ id: 'b' + (++brandCounter), name, vehicleLines: [] });
+    closeModal();
+    renderProgramme();
   });
+  overlay.hidden = false;
+  document.getElementById('brandNameInput').focus();
 }
-function statTile(label, value, foot, tone) {
-  return `<div class="stat-tile"><div class="stat-label">${label}</div><div class="stat-value ${tone||''}">${value}</div><div class="stat-foot">${foot}</div></div>`;
+function addVehicleLineToBrand(brandId) {
+  const b = PROGRAMME.brands.find(x => x.id === brandId);
+  const overlay = document.getElementById('modalOverlay');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <h2>Add a new vehicle line</h2>
+    <p class="modal-sub"><strong>${esc(b.name)}</strong> — add a vehicle line (e.g. a model). You can add model years and programme timing to it afterwards.</p>
+    <div class="field"><label>Vehicle line name</label><input type="text" id="vlineNameInput" placeholder="e.g. Defender 130" /></div>
+    <div class="field"><label>Programme code (optional)</label><input type="text" id="vlineProgCodeInput" placeholder="e.g. L663" /></div>
+    <div class="modal-actions">
+      <button class="theme-toggle" id="modalCancel">Cancel</button>
+      <button class="theme-toggle primary" id="vlineCreateBtn">Add vehicle line</button>
+    </div>
+  `;
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('vlineCreateBtn').addEventListener('click', () => {
+    const name = document.getElementById('vlineNameInput').value.trim();
+    if (!name) { alert('Enter a vehicle line name.'); return; }
+    b.vehicleLines.push({ id: 'vlx' + (++vlxCounter), name, programmeCode: document.getElementById('vlineProgCodeInput').value.trim(), modelYears: [] });
+    closeModal();
+    renderProgramme();
+  });
+  overlay.hidden = false;
+  document.getElementById('vlineNameInput').focus();
 }
+function deleteVehicleLineDef(brandId, vlineId) {
+  const b = PROGRAMME.brands.find(x => x.id === brandId);
+  const vl = b.vehicleLines.find(x => x.id === vlineId);
+  if (vl.modelYears.length && !confirm(`This vehicle line has ${vl.modelYears.length} model year(s) with tracked components. Remove it anyway?`)) return;
+  const removedIds = vl.modelYears.map(my => my.id);
+  b.vehicleLines = b.vehicleLines.filter(x => x.id !== vlineId);
+  COMPONENTS.forEach(c => { c.vehicleLineIds = c.vehicleLineIds.filter(id => !removedIds.includes(id)); });
+  rebuildVehicleLines();
+  renderProgramme(); renderVehicleList(); refreshVehicleDetail(); renderComponentTable(); renderDashboard();
+}
+function deleteModelYear(brandId, vlineId, myId) {
+  const b = PROGRAMME.brands.find(x => x.id === brandId);
+  const vl = b.vehicleLines.find(x => x.id === vlineId);
+  if (!confirm('Remove this model year? Components fitted to it will be unassigned from it (not deleted).')) return;
+  vl.modelYears = vl.modelYears.filter(x => x.id !== myId);
+  COMPONENTS.forEach(c => { c.vehicleLineIds = c.vehicleLineIds.filter(id => id !== myId); });
+  rebuildVehicleLines();
+  renderProgramme(); renderVehicleList(); refreshVehicleDetail(); renderComponentTable(); renderDashboard();
+}
+
+/* ============================================================
+   ADD MODEL YEAR / NEW VEHICLE LINE MODAL (shared)
+   ============================================================ */
+function findVline(brandId, vlineId) {
+  const b = PROGRAMME.brands.find(x => x.id === brandId);
+  return b && b.vehicleLines.find(x => x.id === vlineId);
+}
+function openAddModelYearModal(preset) {
+  preset = preset || {};
+  const overlay = document.getElementById('modalOverlay');
+  const body = document.getElementById('modalBody');
+  const brandOptions = PROGRAMME.brands.map(b => `<option value="${b.id}" ${b.id === preset.brandId ? 'selected' : ''}>${esc(b.name)}</option>`).join('');
+  const presetVl = preset.vehicleLineId ? findVline(preset.brandId, preset.vehicleLineId) : null;
+  body.innerHTML = `
+    <h2>Add a new model year</h2>
+    <p class="modal-sub">Define the vehicle line and programme timing. This appears immediately in Vehicle Lines and the Dashboard.</p>
+    ${!preset.vehicleLineId ? `
+    <div class="modal-grid2">
+      <div class="field"><label>Brand</label><select id="mySelBrand">${brandOptions}</select></div>
+      <div class="field"><label>Vehicle line</label><select id="mySelVline"></select></div>
+    </div>
+    <div class="field" id="myNewVlineWrap" hidden><label>New vehicle line name</label><input type="text" id="myNewVlineName" placeholder="e.g. Range Rover" /></div>
+    ` : `<p class="modal-sub"><strong>${esc(presetVl.name)}</strong>${presetVl.programmeCode ? ' · ' + esc(presetVl.programmeCode) : ''}</p>`}
+    <div class="modal-grid2">
+      <div class="field"><label>Model year label</label><input type="text" id="myLabel" placeholder="e.g. 27MY" /></div>
+      <div class="field"><label>Programme code (optional)</label><input type="text" id="myProgCode" value="${esc(presetVl ? presetVl.programmeCode || '' : '')}" placeholder="e.g. L460" /></div>
+    </div>
+    <div class="modal-grid2">
+      <div class="field"><label>System Judgement</label><input type="date" id="myGate1" /></div>
+      <div class="field"><label>Design Freeze</label><input type="date" id="myGate2" /></div>
+    </div>
+    <div class="modal-grid2">
+      <div class="field"><label>Production Review</label><input type="date" id="myGate3" /></div>
+      <div class="field"><label>Vehicle Sign-off</label><input type="date" id="myGate4" /></div>
+    </div>
+    <div class="field"><label>Carry over the component list from</label><select id="myCarryOver"><option value="">None — start empty</option></select></div>
+    <div class="modal-actions">
+      <button class="theme-toggle" id="modalCancel">Cancel</button>
+      <button class="theme-toggle primary" id="myCreateBtn">Create model year</button>
+    </div>
+  `;
+  function refreshCarryOver(brandId, vlineId) {
+    const sel = document.getElementById('myCarryOver');
+    sel.innerHTML = '<option value="">None — start empty</option>';
+    if (!brandId || !vlineId || vlineId === '__new__') return;
+    const vl = findVline(brandId, vlineId);
+    if (!vl) return;
+    [...vl.modelYears].reverse().forEach(my => sel.insertAdjacentHTML('beforeend', `<option value="${my.id}">${esc(vl.name)} ${esc(my.label)}</option>`));
+    if (vl.modelYears.length) sel.value = vl.modelYears[vl.modelYears.length - 1].id;
+  }
+  if (!preset.vehicleLineId) {
+    function refreshVlineSelect(brandId) {
+      const b = PROGRAMME.brands.find(x => x.id === brandId);
+      const vSel = document.getElementById('mySelVline');
+      vSel.innerHTML = b.vehicleLines.map(vl => `<option value="${vl.id}">${esc(vl.name)}</option>`).join('') + `<option value="__new__">+ New vehicle line…</option>`;
+      document.getElementById('myNewVlineWrap').hidden = true;
+      refreshCarryOver(brandId, vSel.value);
+    }
+    document.getElementById('mySelBrand').addEventListener('change', e => refreshVlineSelect(e.target.value));
+    refreshVlineSelect(preset.brandId || PROGRAMME.brands[0].id);
+    document.getElementById('mySelVline').addEventListener('change', e => {
+      document.getElementById('myNewVlineWrap').hidden = e.target.value !== '__new__';
+      refreshCarryOver(document.getElementById('mySelBrand').value, e.target.value);
+    });
+  } else {
+    refreshCarryOver(preset.brandId, preset.vehicleLineId);
+  }
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('myCreateBtn').addEventListener('click', () => {
+    const brandId = preset.brandId || document.getElementById('mySelBrand').value;
+    let vlineId = preset.vehicleLineId || document.getElementById('mySelVline').value;
+    const b = PROGRAMME.brands.find(x => x.id === brandId);
+    const label = document.getElementById('myLabel').value.trim();
+    if (!label) { alert('Enter a model year label, e.g. 27MY.'); return; }
+    if (vlineId === '__new__') {
+      const newName = document.getElementById('myNewVlineName').value.trim();
+      if (!newName) { alert('Enter a name for the new vehicle line.'); return; }
+      const vlObj = { id: 'vlx' + (++vlxCounter), name: newName, programmeCode: document.getElementById('myProgCode').value.trim(), modelYears: [] };
+      b.vehicleLines.push(vlObj);
+      vlineId = vlObj.id;
+    }
+    const vl = b.vehicleLines.find(x => x.id === vlineId);
+    const g1 = document.getElementById('myGate1').value, g2 = document.getElementById('myGate2').value, g3 = document.getElementById('myGate3').value, g4 = document.getElementById('myGate4').value;
+    if (!g1 || !g2 || !g3 || !g4) { alert('Set all four gateway dates.'); return; }
+    const newMy = { id: 'vl' + (++vlCounter), label, systemJudgement: g1, designFreeze: g2, prodReview: g3, signOff: g4 };
+    vl.modelYears.push(newMy);
+    const carryFrom = document.getElementById('myCarryOver').value;
+    rebuildVehicleLines();
+    if (carryFrom) {
+      COMPONENTS.forEach(c => { if (c.vehicleLineIds.includes(carryFrom) && !c.vehicleLineIds.includes(newMy.id)) { c.vehicleLineIds.push(newMy.id); ensureRecordsForComponent(c); } });
+    }
+    closeModal();
+    selectedVlineId = newMy.id;
+    renderProgramme(); renderVehicleList(); refreshVehicleDetail(); renderComponentTable(); renderDashboard();
+  });
+  overlay.hidden = false;
+}
+function closeModal() { document.getElementById('modalOverlay').hidden = true; }
 
 /* ============================================================
    VEHICLE LINES VIEW
    ============================================================ */
-let selectedVlineId = VEHICLE_LINES[2].id; // default: RR Sport 27MY
+let selectedVlineId = 'vl3'; // default: RR Sport 27MY
 
+function populateVlineBrandFilter() {
+  const sel = document.getElementById('vlineBrandFilter');
+  const current = sel.value;
+  const brands = [...new Set(VEHICLE_LINES.map(v => v.brandName))].sort();
+  sel.innerHTML = '<option value="">All brands</option>' + brands.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+  if (brands.includes(current)) sel.value = current;
+}
 function renderVehicleList() {
-  document.getElementById('vlineList').innerHTML = VEHICLE_LINES.map(vl => `
-    <div class="vline-item ${vl.id === selectedVlineId ? 'active' : ''}" data-id="${vl.id}">
+  populateVlineBrandFilter();
+  const q = document.getElementById('vlineSearch').value.trim().toLowerCase();
+  const brandF = document.getElementById('vlineBrandFilter').value;
+  const hideSigned = document.getElementById('hideSignedOffVlines').checked;
+  document.getElementById('hideSignedOffVlinesChip').classList.toggle('on', hideSigned);
+  let list = VEHICLE_LINES.filter(vl => {
+    if (hideSigned && vl.phase === 'signed-off') return false;
+    if (brandF && vl.brandName !== brandF) return false;
+    if (q && !(`${vl.nameplate} ${vl.programme} ${vl.my}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  list = list.slice().sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
+  if (!list.find(v => v.id === selectedVlineId) && list.length) selectedVlineId = list[0].id;
+  document.getElementById('vlineList').innerHTML = list.length ? list.map(vl => {
+    const [gateLabel, gateDate] = nextGateInfo(vl);
+    return `<div class="vline-item ${vl.id === selectedVlineId ? 'active' : ''}" data-id="${vl.id}">
       <div>
         <div class="vline-name">${esc(vl.nameplate)} <span style="color:var(--text-muted); font-weight:500;">${vl.my}</span></div>
-        <div class="vline-code">${vl.programme} · sign-off ${fmtDate(vl.signOffDate)}</div>
+        <div class="vline-code">${esc(vl.programme)} · next: ${esc(gateLabel)} ${fmtDate(gateDate)}</div>
       </div>
       ${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('') : '<div class="empty-state">No vehicle lines match.</div>';
   document.querySelectorAll('.vline-item').forEach(el => el.addEventListener('click', () => {
     selectedVlineId = el.dataset.id; renderVehicleList(); renderVehicleDetail();
   }));
 }
+function refreshVehicleDetail() { renderVehicleList(); renderVehicleDetail(); }
 
 function gateStep(label, date, state) {
   return `<div class="gate-step ${state}"><div class="gline"></div><div class="gate-dot">${state === 'done' ? '✓' : ''}</div><div class="gate-label">${label}</div><div class="gate-date">${fmtDate(date)}</div></div>`;
 }
 function renderVehicleDetail() {
   const vl = VEHICLE_LINES.find(v => v.id === selectedVlineId);
+  if (!vl) { document.getElementById('vlineDetail').innerHTML = '<div class="empty-state">Select a vehicle line, or add one from the Programme tab.</div>'; return; }
   const recs = recordsForVehicleLine(vl.id);
-  const gates = [
-    ['System Judgement', vl.systemJudgementDate], ['Design Freeze', vl.designFreezeDate],
-    ['Production Review', vl.prodReviewDate], ['Vehicle Sign-off', vl.signOffDate],
-  ];
+  const gates = [['System Judgement', vl.systemJudgementDate], ['Design Freeze', vl.designFreezeDate], ['Production Review', vl.prodReviewDate], ['Vehicle Sign-off', vl.signOffDate]];
   const gateHtml = gates.map(([label, date]) => {
     const state = date < TODAY ? 'done' : (date - TODAY < 90 * 86400000 ? 'active' : '');
     return gateStep(label, date, state);
@@ -725,68 +1220,91 @@ function renderVehicleDetail() {
       <td>${esc(c.engineer)}</td>
       <td>${badge(r.grade.status, GRADE_TONE[r.grade.status])}</td>
       <td>${badge(emcOverallStatus(r.emc), EMC_TONE[emcOverallStatus(r.emc)])}</td>
+      <td>${badge(r.fusa.status, FUSA_TONE[r.fusa.status])}</td>
+      <td>${badge(r.cyber.status, CYBER_TONE[r.cyber.status])}</td>
+      <td><button class="icon-btn" data-remove-comp="${c.id}" title="Unassign from this vehicle line">✕</button></td>
     </tr>`;
   }).join('');
+
+  const unassigned = COMPONENTS.filter(c => !c.vehicleLineIds.includes(vl.id));
+  const addRowHtml = unassigned.length ? `
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      <select id="addExistingComp" style="flex:1; min-width:220px; font-family:var(--font); font-size:12.5px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text-primary); border-radius:7px; padding:8px 10px;">
+        ${unassigned.map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.supplier)})</option>`).join('')}
+      </select>
+      <button class="theme-toggle" id="addExistingCompBtn">+ Add to this vehicle line</button>
+    </div>` : '<div class="cell-sub" style="margin-top:10px;">All components are already fitted to this vehicle line.</div>';
 
   document.getElementById('vlineDetail').innerHTML = `
     <div class="card">
       <div class="card-head">
-        <div><div class="card-title">${esc(vl.nameplate)} — ${vl.my}</div><div class="card-sub">Programme ${vl.programme} · ${vl.phaseLabel}</div></div>
+        <div><div class="card-title">${esc(vl.nameplate)} — ${vl.my}</div><div class="card-sub">Programme ${esc(vl.programme)} · ${vl.phaseLabel}</div></div>
         ${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}
       </div>
       <div class="gate-track">${gateHtml}</div>
     </div>
     <div class="card">
-      <div class="card-head"><div class="card-title">Fitted components</div><div class="card-sub">${recs.length} components on this vehicle line</div></div>
+      <div class="card-head">
+        <div><div class="card-title">Fitted components</div><div class="card-sub">${recs.length} components on this vehicle line</div></div>
+        <button class="theme-toggle" id="refreshVlineBtn">↻ Refresh components</button>
+      </div>
       <table class="simple">
-        <thead><tr><th>Component</th><th>Supplier</th><th>Engineer</th><th>GRADE</th><th>EMC</th></tr></thead>
-        <tbody>${rows}</tbody>
+        <thead><tr><th>Component</th><th>Supplier</th><th>Engineer</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="8" class="empty-state">No components fitted yet.</td></tr>`}</tbody>
       </table>
+      ${addRowHtml}
     </div>
   `;
-  document.querySelectorAll('#vlineDetail tbody tr').forEach(tr => {
-    tr.addEventListener('click', () => openComponent(tr.dataset.comp, tr.dataset.vline));
+  document.querySelectorAll('#vlineDetail tbody tr[data-comp]').forEach(tr => tr.addEventListener('click', () => openComponentTicket(tr.dataset.comp, tr.dataset.vline)));
+  document.querySelectorAll('#vlineDetail [data-remove-comp]').forEach(btn => btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const c = COMPONENTS.find(x => x.id === btn.dataset.removeComp);
+    c.vehicleLineIds = c.vehicleLineIds.filter(id => id !== vl.id);
+    refreshVehicleDetail(); renderComponentTable();
+  }));
+  const refreshBtn = document.getElementById('refreshVlineBtn');
+  if (refreshBtn) refreshBtn.addEventListener('click', refreshVehicleDetail);
+  const addBtn = document.getElementById('addExistingCompBtn');
+  if (addBtn) addBtn.addEventListener('click', () => {
+    const cid = document.getElementById('addExistingComp').value;
+    const c = COMPONENTS.find(x => x.id === cid);
+    c.vehicleLineIds.push(vl.id); ensureRecordsForComponent(c);
+    refreshVehicleDetail(); renderComponentTable();
   });
 }
 
 /* ============================================================
    COMPONENTS VIEW
    ============================================================ */
-let selectedComponentId = null;
-let selectedComponentVline = null;
-let activeDetailTab = 'grade';
-
-function populateComponentFilters() {
+function populateVlineFilterSelect() {
   const vlSel = document.getElementById('filterVline');
-  VEHICLE_LINES.forEach(vl => vlSel.insertAdjacentHTML('beforeend', `<option value="${vl.id}">${esc(vl.nameplate)} ${vl.my}</option>`));
-  const gSel = document.getElementById('filterGrade');
-  GRADE_STAGES.forEach(s => gSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
-  const eSel = document.getElementById('filterEmc');
-  EMC_OVERALL_ORDER.forEach(s => eSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  const cur = vlSel.value;
+  vlSel.innerHTML = '<option value="">All vehicle lines</option>' + VEHICLE_LINES.map(vl => `<option value="${vl.id}">${esc(vl.nameplate)} ${vl.my}</option>`).join('');
+  vlSel.value = cur;
 }
-
-function componentSummary(c) {
-  const recs = recordsForComponent(c.id);
-  // "worst case" status ranking for the roll-up badge
-  const gradeRank = ['Complete', 'Production Review Active', 'Design review Active', 'Pre Grade', 'Not started'];
-  const worstGrade = recs.map(r => r.grade.status).sort((a, b) => gradeRank.indexOf(b) - gradeRank.indexOf(a))[0];
-  const emcRank = ['Compliant', 'Deviation Approved', 'Class 2 Acceptance', 'Awaiting test results', 'Plan under review', 'Not started', 'Non-Compliant'];
-  const emcStatuses = recs.map(r => emcOverallStatus(r.emc));
-  const worstEmc = emcStatuses.sort((a, b) => emcRank.indexOf(b) - emcRank.indexOf(a))[0];
-  return { worstGrade, worstEmc, recs };
+function populateComponentFilters() {
+  populateVlineFilterSelect();
+  const gSel = document.getElementById('filterGrade'); GRADE_STAGES.forEach(s => gSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  const eSel = document.getElementById('filterEmc'); EMC_OVERALL_ORDER.forEach(s => eSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  const fSel = document.getElementById('filterFusa'); FUSA_STAGES.forEach(s => fSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  const cSel = document.getElementById('filterCyber'); CYBER_STAGES.forEach(s => cSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
 }
-
 function renderComponentTable() {
+  populateVlineFilterSelect();
   const q = document.getElementById('compSearch').value.trim().toLowerCase();
   const fVline = document.getElementById('filterVline').value;
   const fGrade = document.getElementById('filterGrade').value;
   const fEmc = document.getElementById('filterEmc').value;
+  const fFusa = document.getElementById('filterFusa').value;
+  const fCyber = document.getElementById('filterCyber').value;
 
   let list = COMPONENTS.filter(c => {
     if (fVline && !c.vehicleLineIds.includes(fVline)) return false;
-    const { worstGrade, worstEmc } = componentSummary(c);
-    if (fGrade && worstGrade !== fGrade) return false;
-    if (fEmc && worstEmc !== fEmc) return false;
+    const s = componentSummary(c);
+    if (fGrade && s.worstGrade !== fGrade) return false;
+    if (fEmc && s.worstEmc !== fEmc) return false;
+    if (fFusa && s.worstFusa !== fFusa) return false;
+    if (fCyber && s.worstCyber !== fCyber) return false;
     if (q) {
       const hay = `${c.name} ${c.partNumber.prefix}${c.partNumber.base}${c.partNumber.suffix} ${c.supplier} ${c.engineer}`.toLowerCase();
       if (!hay.includes(q)) return false;
@@ -797,116 +1315,325 @@ function renderComponentTable() {
   document.getElementById('compCount').textContent = `${list.length} of ${COMPONENTS.length} components`;
 
   const rows = list.map(c => {
-    const { worstGrade, worstEmc } = componentSummary(c);
-    const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v.nameplate + ' ' + v.my; }).join(', ');
+    const s = componentSummary(c);
+    const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? v.nameplate + ' ' + v.my : null; }).filter(Boolean).join(', ') || '—';
     return `<tr data-comp="${c.id}">
       <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
       <td>${esc(c.supplier)}</td>
       <td>${esc(c.engineer)}</td>
-      <td class="cell-sub">${esc(lines)}</td>
-      <td>${badge(worstGrade, GRADE_TONE[worstGrade])}</td>
-      <td>${badge(worstEmc, EMC_TONE[worstEmc])}</td>
+      <td class="cell-sub vlines-cell" title="${esc(lines)}">${esc(lines)}</td>
+      <td>${badge(s.worstGrade, GRADE_TONE[s.worstGrade])}</td>
+      <td>${badge(s.worstEmc, EMC_TONE[s.worstEmc])}</td>
+      <td>${badge(s.worstFusa, FUSA_TONE[s.worstFusa])}</td>
+      <td>${badge(s.worstCyber, CYBER_TONE[s.worstCyber])}</td>
+      <td class="rr-dev-cell">${rrPlanCell(c)}</td>
+      <td class="rr-dev-cell">${devCell(c)}</td>
     </tr>`;
   }).join('');
 
   document.getElementById('compTableWrap').innerHTML = list.length ? `
     <table class="simple">
-      <thead><tr><th>Component</th><th>Supplier</th><th>Engineer</th><th>Vehicle lines</th><th>GRADE</th><th>EMC</th></tr></thead>
+      <thead><tr><th>Component</th><th>Supplier</th><th>Engineer</th><th>Vehicle lines</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th><th>R&amp;R Plan</th><th>Deviation</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>` : `<div class="empty-state">No components match those filters.</div>`;
 
-  document.querySelectorAll('#compTableWrap tbody tr').forEach(tr => {
-    tr.addEventListener('click', () => openComponent(tr.dataset.comp));
-  });
+  document.querySelectorAll('#compTableWrap tbody tr').forEach(tr => tr.addEventListener('click', () => openComponentTicket(tr.dataset.comp)));
 }
 
-function openComponent(componentId, vehicleLineId) {
-  selectedComponentId = componentId;
-  const c = COMPONENTS.find(x => x.id === componentId);
-  selectedComponentVline = vehicleLineId && c.vehicleLineIds.includes(vehicleLineId) ? vehicleLineId : c.vehicleLineIds[0];
-  activeDetailTab = 'grade';
-  setActiveView('components');
-  renderComponentDetail();
-  document.getElementById('compDetailCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function renderComponentDetail() {
-  const card = document.getElementById('compDetailCard');
-  if (!selectedComponentId) { card.hidden = true; return; }
-  card.hidden = false;
-  const c = COMPONENTS.find(x => x.id === selectedComponentId);
-  const rec = getRecord(c.id, selectedComponentVline);
-  const vl = VEHICLE_LINES.find(v => v.id === selectedComponentVline);
-
-  const vlinePills = c.vehicleLineIds.map(id => {
-    const v = VEHICLE_LINES.find(x => x.id === id);
-    return `<div class="vline-pill ${id === selectedComponentVline ? 'active' : ''}" data-vline="${id}">${esc(v.nameplate)} ${v.my}</div>`;
-  }).join('');
-
-  const subTestRows = rec.emc.subTests.map(st => {
-    const tone = st.result === 'Compliant' ? 'good' : st.result === 'Non-Compliant' ? 'critical' : 'neutral';
-    return `<div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${st.code}</span><span class="subtest-name">${esc(st.name)}</span></div>${badge(st.result, tone)}</div>`;
-  }).join('');
-
-  card.innerHTML = `
-    <div class="card-head">
-      <div>
-        <div class="card-title" style="font-size:16px;">${esc(c.name)}</div>
-        <div class="card-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix} · ${esc(c.dtNumber)}</div>
-      </div>
-      <button class="theme-toggle" id="closeDetail">Close ✕</button>
+function openNewComponentModal() {
+  const overlay = document.getElementById('modalOverlay');
+  const body = document.getElementById('modalBody');
+  const vlinesByBrand = {};
+  VEHICLE_LINES.forEach(vl => { (vlinesByBrand[vl.brandName] = vlinesByBrand[vl.brandName] || []).push(vl); });
+  const pillsHtml = Object.keys(vlinesByBrand).length ? Object.keys(vlinesByBrand).map(brand => `
+    <div class="pill-group-label">${esc(brand)}</div>
+    <div class="pill-row">${vlinesByBrand[brand].map(vl => `<div class="pill-check" data-vl="${vl.id}">${esc(vl.nameplate)} ${esc(vl.my)}</div>`).join('')}</div>
+  `).join('') : '<div class="empty-state">No vehicle lines defined yet — add one in the Programme tab first.</div>';
+  body.innerHTML = `
+    <h2>New component</h2>
+    <p class="modal-sub">Start of the component process — record the basics, then assign it to the vehicle line(s) it's fitted to.</p>
+    <div class="modal-grid2">
+      <div class="field"><label>Component name</label><input type="text" id="ncName" placeholder="e.g. Headlamp LED Driver" /></div>
+      <div class="field"><label>Part number</label><input type="text" id="ncPart" placeholder="e.g. LR73-482910-AA" /></div>
     </div>
-
-    <div class="vline-pill-row">${vlinePills}</div>
-
-    <div class="detail-header">
-      <div><div class="kv-label">Supplier</div><div class="kv-value">${esc(c.supplier)}</div></div>
-      <div><div class="kv-label">Component owner</div><div class="kv-value">${esc(c.engineer)}</div></div>
-      <div><div class="kv-label">Package location</div><div class="kv-value">${esc(c.packageLocation)}</div></div>
-      <div><div class="kv-label">Build stage</div><div class="kv-value">${esc(c.buildStage)}</div></div>
-      <div><div class="kv-label">Hardware type</div><div class="kv-value">${esc(c.hardwareType)}</div></div>
-      <div><div class="kv-label">Functional classification</div><div class="kv-value">${esc(c.functionalClass)}</div></div>
-      <div><div class="kv-label">Vehicle line shown</div><div class="kv-value">${esc(vl.nameplate)} ${vl.my} (${vl.programme})</div></div>
-      <div><div class="kv-label">DT number(s)</div><div class="kv-value mono">${esc(c.dtNumber)}</div></div>
+    <div class="modal-grid2">
+      <div class="field"><label>Supplier</label><input type="text" id="ncSupplier" /></div>
+      <div class="field"><label>Component owner (JLR engineer)</label><input type="text" id="ncEngineer" /></div>
     </div>
-
-    <div class="tabs">
-      <button class="tab-btn ${activeDetailTab==='grade'?'active':''}" data-tab="grade">GRADE</button>
-      <button class="tab-btn ${activeDetailTab==='emc'?'active':''}" data-tab="emc">EMC</button>
+    <div class="modal-grid2">
+      <div class="field"><label>Package location</label><input type="text" id="ncLocation" placeholder="e.g. A14 — Lower Fascia" /></div>
+      <div class="field"><label>Build stage</label><select id="ncBuildStage">${BUILD_STAGES.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>
     </div>
-
-    <div class="tab-panel" id="tab-grade" ${activeDetailTab!=='grade'?'hidden':''}>
-      <div class="grade-grid">
-        <div><div class="kv-label">Status</div><div class="kv-value">${badge(rec.grade.status, GRADE_TONE[rec.grade.status])}</div></div>
-        <div><div class="kv-label">Risk category</div><div class="kv-value">${esc(rec.grade.riskCategory)}</div></div>
-        <div><div class="kv-label">Documents audited</div><div class="kv-value mono">${esc(rec.grade.documentsAudited)}</div></div>
-        <div><div class="kv-label">R&amp;R plan number</div><div class="kv-value mono">${esc(rec.grade.rrPlanNumber)}</div></div>
-        <div><div class="kv-label">Open issues</div><div class="kv-value">${rec.grade.openIssues}</div></div>
-        <div><div class="kv-label">Closed issues</div><div class="kv-value">${rec.grade.closedIssues}</div></div>
-        <div><div class="kv-label">First review date</div><div class="kv-value">${esc(rec.grade.firstReviewDate)}</div></div>
-      </div>
-      <div class="kv-label">Meeting minutes</div>
-      <textarea class="notes" readonly>${esc(rec.grade.meetingNotes)}</textarea>
-      <div class="kv-label" style="margin-top:12px;">GRADE workbook location</div>
-      <div class="loc-field">📄 <span class="mono">${esc(rec.grade.workbookLocation)}</span></div>
+    <div class="modal-grid2">
+      <div class="field"><label>Hardware type</label><select id="ncHwType">${HARDWARE_TYPES.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>
+      <div class="field"><label>Functional classification</label><select id="ncFuncClass">${FUNCTIONAL_CLASS.map(s => `<option>${esc(s)}</option>`).join('')}</select></div>
     </div>
-
-    <div class="tab-panel" id="tab-emc" ${activeDetailTab!=='emc'?'hidden':''}>
-      <div class="grade-grid">
-        <div><div class="kv-label">Test plan status</div><div class="kv-value">${badge(rec.emc.planStatus, rec.emc.planStatus==='EMC test plan approved'?'good':rec.emc.planStatus==='No Approved EMC test plan'?'neutral':'progress')}</div></div>
-        <div><div class="kv-label">Test result status</div><div class="kv-value">${badge(rec.emc.resultStatus, EMC_TONE[emcOverallStatus(rec.emc)])}</div></div>
-        <div><div class="kv-label">JLR EMC reviewer</div><div class="kv-value">${esc(rec.emc.reviewer)}</div></div>
-      </div>
-      <div class="kv-label" style="margin-bottom:6px;">Sub-test results</div>
-      <div class="subtest-grid">${subTestRows}</div>
-      <div class="kv-label" style="margin-top:14px;">Test report location</div>
-      <div class="loc-field">📄 <span class="mono">${esc(rec.emc.testReportLocation)}</span></div>
+    <div class="field"><label>DT number</label><input type="text" id="ncDt" placeholder="e.g. DT48213-2" /></div>
+    <div class="field"><label>Assign to vehicle line(s)</label>${pillsHtml}</div>
+    <div class="modal-actions">
+      <button class="theme-toggle" id="modalCancel">Cancel</button>
+      <button class="theme-toggle primary" id="ncCreateBtn">Create component</button>
     </div>
   `;
+  const selectedVl = new Set();
+  body.querySelectorAll('.pill-check').forEach(el => el.addEventListener('click', () => {
+    el.classList.toggle('active');
+    if (el.classList.contains('active')) selectedVl.add(el.dataset.vl); else selectedVl.delete(el.dataset.vl);
+  }));
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('ncCreateBtn').addEventListener('click', () => {
+    const name = document.getElementById('ncName').value.trim();
+    if (!name) { alert('Enter a component name.'); return; }
+    const partRaw = document.getElementById('ncPart').value.trim();
+    const id = 'c' + (++compCounter);
+    const c = {
+      id, name, partNumber: partRaw ? parsePartNumber(partRaw) : makePartNumber(),
+      supplier: document.getElementById('ncSupplier').value.trim() || 'TBC',
+      engineer: document.getElementById('ncEngineer').value.trim() || 'TBC',
+      packageLocation: document.getElementById('ncLocation').value.trim() || 'TBC',
+      hardwareType: document.getElementById('ncHwType').value, functionalClass: document.getElementById('ncFuncClass').value,
+      buildStage: document.getElementById('ncBuildStage').value,
+      dtNumber: document.getElementById('ncDt').value.trim() || '—',
+      vehicleLineIds: [...selectedVl], rrPlans: [], deviations: [],
+    };
+    COMPONENTS.push(c);
+    ensureRecordsForComponent(c);
+    closeModal();
+    renderComponentTable(); renderDashboard(); refreshVehicleDetail();
+  });
+  overlay.hidden = false;
+}
 
-  document.getElementById('closeDetail').addEventListener('click', () => { selectedComponentId = null; renderComponentDetail(); });
-  card.querySelectorAll('.vline-pill').forEach(el => el.addEventListener('click', () => { selectedComponentVline = el.dataset.vline; renderComponentDetail(); }));
-  card.querySelectorAll('.tab-btn').forEach(el => el.addEventListener('click', () => { activeDetailTab = el.dataset.tab; renderComponentDetail(); }));
+/* ============================================================
+   COMPONENT TICKET — opens in a new browser tab
+   ============================================================ */
+function openComponentTicket(componentId, vehicleLineId) {
+  const c = COMPONENTS.find(x => x.id === componentId);
+  if (!c) return;
+  const vlIds = c.vehicleLineIds;
+  if (!vlIds.length) { alert('This component isn\'t assigned to any vehicle line yet — assign it to one first.'); return; }
+  const vlList = vlIds.map(id => VEHICLE_LINES.find(v => v.id === id)).filter(Boolean);
+  const records = vlIds.map(id => getRecord(componentId, id));
+  const payload = { component: c, vehicleLines: vlList, records, initialVline: (vehicleLineId && vlIds.includes(vehicleLineId)) ? vehicleLineId : vlIds[0] };
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  window.open(location.pathname + '#ticket=' + b64, '_blank');
+}
+
+function initTicketPage(payload) {
+  document.title = payload.component.name + ' — Component ticket';
+  document.body.innerHTML = `
+    <div id="app">
+      <header class="topbar">
+        <div class="brand"><div class="brand-title">EE Assurance Tracker</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
+        <div class="topbar-right" style="margin-left:auto;">
+          <span class="demo-pill">Ticket view</span>
+          <button class="theme-toggle" id="exportTicketBtn">Export ticket (JSON)</button>
+          <button class="theme-toggle" id="themeToggle">◐ Theme</button>
+        </div>
+      </header>
+      <main id="ticketMain" style="max-width:980px;"></main>
+      <footer>Proof of concept — this ticket is a snapshot passed via the link; it isn't wired to a live backend yet, so edits here stay in this browser tab.</footer>
+    </div>
+  `;
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+  document.getElementById('exportTicketBtn').addEventListener('click', () => {
+    download(`${payload.component.name.replace(/[^a-z0-9]+/gi, '-')}_ticket.json`, JSON.stringify(payload, null, 2), 'application/json');
+  });
+
+  const c = payload.component;
+  let currentVl = payload.initialVline;
+  let activeTab = 'grade';
+  const records = {}; payload.records.forEach(r => records[r.vehicleLineId] = r);
+
+  function render() {
+    const vl = payload.vehicleLines.find(v => v.id === currentVl);
+    const rec = records[currentVl];
+    const vlinePills = payload.vehicleLines.map(v => `<div class="vline-pill ${v.id === currentVl ? 'active' : ''}" data-vl="${v.id}">${esc(v.nameplate)} ${v.my}</div>`).join('');
+    document.getElementById('ticketMain').innerHTML = `
+      <div class="ticket-notice">Snapshot ticket for <strong>${esc(c.name)}</strong>, opened ${new Date().toLocaleString('en-GB')}. Changes made here stay in this browser tab, the same as this tool's other proof-of-concept pages — there's no backend yet to sync them back.</div>
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title" style="font-size:16px;">${esc(c.name)}</div><div class="card-sub mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}-${esc(c.partNumber.suffix)} · ${esc(c.dtNumber)}</div></div>
+        </div>
+        <div class="vline-pill-row">${vlinePills}</div>
+        <div class="detail-header">
+          <div><div class="kv-label">Supplier</div><div class="kv-value">${esc(c.supplier)}</div></div>
+          <div><div class="kv-label">Component owner</div><div class="kv-value">${esc(c.engineer)}</div></div>
+          <div><div class="kv-label">Package location</div><div class="kv-value">${esc(c.packageLocation)}</div></div>
+          <div><div class="kv-label">Build stage</div><div class="kv-value">${esc(c.buildStage)}</div></div>
+          <div><div class="kv-label">Hardware type</div><div class="kv-value">${esc(c.hardwareType)}</div></div>
+          <div><div class="kv-label">Functional classification</div><div class="kv-value">${esc(c.functionalClass)}</div></div>
+          <div><div class="kv-label">Vehicle line shown</div><div class="kv-value">${esc(vl.nameplate)} ${vl.my} (${esc(vl.programme)})</div></div>
+          <div><div class="kv-label">DT number(s)</div><div class="kv-value mono">${esc(c.dtNumber)}</div></div>
+        </div>
+        <div class="tabs" id="ticketTabs">
+          <button class="tab-btn ${activeTab==='grade'?'active':''}" data-tab="grade">GRADE</button>
+          <button class="tab-btn ${activeTab==='emc'?'active':''}" data-tab="emc">EMC</button>
+          <button class="tab-btn ${activeTab==='fusa'?'active':''}" data-tab="fusa">Functional Safety</button>
+          <button class="tab-btn ${activeTab==='cyber'?'active':''}" data-tab="cyber">Cyber Security</button>
+        </div>
+        <div id="ticketTabBody"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Risk &amp; Recovery plans</div><div class="card-sub">Tracked against the component; applies across whichever vehicle lines are affected</div></div><button class="theme-toggle" id="addRR">+ Add R&amp;R plan</button></div>
+        <div id="rrWrap"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Deviations</div><div class="card-sub">Include the vehicle lines each deviation applies to</div></div><button class="theme-toggle" id="addDev">+ Add deviation</button></div>
+        <div id="devWrap"></div>
+      </div>
+    `;
+    renderTabBody(rec, vl);
+    renderRR(); renderDev();
+    document.querySelectorAll('.vline-pill').forEach(el => el.addEventListener('click', () => { currentVl = el.dataset.vl; render(); }));
+    document.querySelectorAll('#ticketTabs .tab-btn').forEach(el => el.addEventListener('click', () => { activeTab = el.dataset.tab; render(); }));
+    document.getElementById('addRR').addEventListener('click', () => { c.rrPlans.push({ planNumber: '', area: 'GRADE', description: '', closeDate: '', status: 'Open' }); renderRR(); });
+    document.getElementById('addDev').addEventListener('click', () => { c.deviations.push({ deviationNumber: '', area: 'GRADE', vehicleLineIds: [currentVl], closeDate: '', status: 'Open' }); renderDev(); });
+  }
+
+  function renderTabBody(rec, vl) {
+    const wrap = document.getElementById('ticketTabBody');
+    if (activeTab === 'grade') wrap.innerHTML = gradeTabHtml(rec);
+    else if (activeTab === 'emc') wrap.innerHTML = emcTabHtml(rec);
+    else if (activeTab === 'fusa') wrap.innerHTML = genericTabHtml(rec.fusa, FUSA_STAGES, 'Functional safety');
+    else wrap.innerHTML = genericTabHtml(rec.cyber, CYBER_STAGES, 'Cyber security');
+    wireTabInputs(rec);
+  }
+  function gradeTabHtml(rec) {
+    return `
+      <div class="grade-grid">
+        <div class="field-inline"><label>Status</label><select data-f="grade.status">${selectOpts(GRADE_STAGES, rec.grade.status)}</select></div>
+        <div class="field-inline"><label>Risk category</label><select data-f="grade.riskCategory">${selectOpts(RISK_CATEGORIES, rec.grade.riskCategory)}</select></div>
+        <div class="field-inline"><label>Documents audited</label><input type="text" data-f="grade.documentsAudited" value="${esc(rec.grade.documentsAudited)}" /></div>
+        <div class="field-inline"><label>First review date</label><input type="text" data-f="grade.firstReviewDate" value="${esc(rec.grade.firstReviewDate || '')}" /></div>
+      </div>
+      <div class="kv-label">Meeting minutes</div>
+      <textarea class="notes" data-f="grade.meetingNotes">${esc(rec.grade.meetingNotes || '')}</textarea>
+      <div class="grade-link-card">📘 <div><strong>GRADE workbook</strong><div class="cell-sub">Open the interactive GRADE review workbook for this component to fill in the detailed checklist.</div></div>
+        <a href="${esc(GRADE_WORKBOOK_URL)}" target="_blank" class="theme-toggle" style="margin-left:auto; text-decoration:none;">Open GRADE workbook →</a>
+      </div>
+    `;
+  }
+  function emcTabHtml(rec) {
+    const subRows = rec.emc.subTests.map((st, i) => `
+      <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${st.code}</span><span class="subtest-name">${esc(st.name)}</span></div>
+      <select data-subtest="${i}">${selectOpts(['Compliant', 'Non-Compliant', 'Test in Progress', 'No Test Required'], st.result)}</select></div>
+    `).join('');
+    return `
+      <div class="grade-grid">
+        <div class="field-inline"><label>Test plan status</label><select data-f="emc.planStatus">${selectOpts(EMC_PLAN_STAGES, rec.emc.planStatus)}</select></div>
+        <div class="field-inline"><label>Test result status (reported state)</label><select data-f="emc.resultStatus">${selectOpts(EMC_RESULT_STAGES, rec.emc.resultStatus)}</select></div>
+        <div class="field-inline"><label>Risk category</label><select data-f="emc.riskCategory">${selectOpts(RISK_CATEGORIES, rec.emc.riskCategory)}</select></div>
+        <div class="field-inline"><label>Documents audited (JLR EMC standard)</label><input type="text" data-f="emc.documentsAudited" value="${esc(rec.emc.documentsAudited)}" /></div>
+      </div>
+      <div class="field-inline" style="max-width:320px; margin-bottom:14px;"><label>JLR EMC reviewer</label><input type="text" data-f="emc.reviewer" value="${esc(rec.emc.reviewer || '')}" /></div>
+      <div class="kv-label" style="margin-bottom:6px;">Sub-test results — change any result to see the reported state update</div>
+      <div class="subtest-grid">${subRows}</div>
+      <div class="kv-label" style="margin-top:14px;">Test report location</div>
+      <div class="loc-field">📄 <span class="mono">${esc(rec.emc.testReportLocation)}</span></div>
+    `;
+  }
+  function genericTabHtml(sub, stages, label) {
+    return `
+      <div class="grade-grid">
+        <div class="field-inline"><label>Status</label><select data-f="sub.status">${selectOpts(stages, sub.status)}</select></div>
+        <div class="field-inline"><label>Risk category</label><select data-f="sub.riskCategory">${selectOpts(RISK_CATEGORIES, sub.riskCategory)}</select></div>
+        <div class="field-inline"><label>Documents audited</label><input type="text" data-f="sub.documentsAudited" value="${esc(sub.documentsAudited || '')}" /></div>
+        <div class="field-inline"><label>Reviewer</label><input type="text" data-f="sub.reviewer" value="${esc(sub.reviewer || '')}" /></div>
+      </div>
+      <div class="kv-label">Notes</div>
+      <textarea class="notes" data-f="sub.notes">${esc(sub.notes || '')}</textarea>
+      <div class="ticket-notice" style="margin-top:12px;">${esc(label)} tracking is a placeholder — headings copied over from GRADE until the real workflow is defined.</div>
+    `;
+  }
+  function wireTabInputs(rec) {
+    document.querySelectorAll('#ticketTabBody [data-f]').forEach(el => {
+      const path = el.dataset.f.split('.');
+      const ev = el.tagName === 'SELECT' ? 'change' : 'blur';
+      el.addEventListener(ev, () => {
+        const target = path[0] === 'grade' ? rec.grade : path[0] === 'emc' ? rec.emc : (activeTab === 'fusa' ? rec.fusa : rec.cyber);
+        target[path[1]] = el.value;
+      });
+    });
+    document.querySelectorAll('#ticketTabBody [data-subtest]').forEach(el => {
+      el.addEventListener('change', () => {
+        rec.emc.subTests[Number(el.dataset.subtest)].result = el.value;
+        rec.emc.resultStatus = deriveEmcResultStatus(rec.emc.subTests, rec.emc.resultStatus);
+        renderTabBody(rec);
+      });
+    });
+  }
+  // Derives the overall EMC "reported state" from the individual sub-test results, so changing a single
+  // sub-test's result is visibly reflected in the summary status. Non-Compliant on any sub-test always wins;
+  // a manually-set special-case override (Class 2 Acceptance / Deviation Approved) stays put until a
+  // Non-Compliant result forces it back to Non-Compliant.
+  function deriveEmcResultStatus(subTests, currentStatus) {
+    if (subTests.some(st => st.result === 'Non-Compliant')) return 'Non-Compliant';
+    if (currentStatus === 'Class 2 Acceptance' || currentStatus === 'Deviation Approved') return currentStatus;
+    if (subTests.every(st => st.result === 'No Test Required')) return 'No test results';
+    if (subTests.some(st => st.result === 'Test in Progress')) return 'No test results';
+    if (subTests.some(st => st.result === 'Compliant')) return 'Compliant';
+    return 'No test results';
+  }
+  function renderRR() {
+    const wrap = document.getElementById('rrWrap');
+    if (!c.rrPlans.length) { wrap.innerHTML = '<div class="empty-state">No R&amp;R plans yet.</div>'; return; }
+    wrap.innerHTML = c.rrPlans.map((p, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>Plan ${i + 1}</strong><button class="icon-btn" data-rr-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Plan number</label><input type="text" data-rr="${i}.planNumber" value="${esc(p.planNumber)}" /></div>
+          <div class="field-inline"><label>Area</label><select data-rr="${i}.area">${selectOpts(['GRADE', 'EMC', 'Functional Safety', 'Cyber Security', 'General'], p.area)}</select></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Status</label><select data-rr="${i}.status">${selectOpts(['Open', 'On Track', 'At Risk', 'Closed'], p.status)}</select></div>
+          <div class="field-inline"><label>Close date (business expects resolution by)</label><input type="date" data-rr="${i}.closeDate" value="${esc(p.closeDate || '')}" /></div>
+        </div>
+        <div class="field-inline" style="margin-top:8px;"><label>Description</label><input type="text" data-rr="${i}.description" value="${esc(p.description || '')}" /></div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('[data-rr]').forEach(el => {
+      const [idx, key] = el.dataset.rr.split('.');
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'blur', () => { c.rrPlans[Number(idx)][key] = el.value; });
+    });
+    wrap.querySelectorAll('[data-rr-rm]').forEach(el => el.addEventListener('click', () => { c.rrPlans.splice(Number(el.dataset.rrRm), 1); renderRR(); }));
+  }
+  function renderDev() {
+    const wrap = document.getElementById('devWrap');
+    if (!c.deviations.length) { wrap.innerHTML = '<div class="empty-state">No deviations yet.</div>'; return; }
+    wrap.innerHTML = c.deviations.map((d, i) => `
+      <div class="dev-row">
+        <div class="dev-row-head"><strong>Deviation ${i + 1}</strong><button class="icon-btn" data-dev-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Deviation number</label><input type="text" data-dev="${i}.deviationNumber" value="${esc(d.deviationNumber)}" /></div>
+          <div class="field-inline"><label>Area</label><select data-dev="${i}.area">${selectOpts(['GRADE', 'EMC', 'Functional Safety', 'Cyber Security', 'General'], d.area)}</select></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Status</label><select data-dev="${i}.status">${selectOpts(['Open', 'Approved - Interim', 'Approved - Permanent', 'Closed'], d.status)}</select></div>
+          <div class="field-inline"><label>Close date (business expects resolution by)</label><input type="date" data-dev="${i}.closeDate" value="${esc(d.closeDate || '')}" /></div>
+        </div>
+        <div class="field-inline" style="margin-top:8px;"><label>Vehicle lines this deviation applies to</label>
+          <div class="pill-row">${payload.vehicleLines.map(v => `<div class="pill-check ${d.vehicleLineIds.includes(v.id) ? 'active' : ''}" data-dev-vl="${i}.${v.id}">${esc(v.nameplate)} ${v.my}</div>`).join('')}</div>
+        </div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('[data-dev]').forEach(el => {
+      const [idx, key] = el.dataset.dev.split('.');
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'blur', () => { c.deviations[Number(idx)][key] = el.value; });
+    });
+    wrap.querySelectorAll('[data-dev-rm]').forEach(el => el.addEventListener('click', () => { c.deviations.splice(Number(el.dataset.devRm), 1); renderDev(); }));
+    wrap.querySelectorAll('[data-dev-vl]').forEach(el => el.addEventListener('click', () => {
+      const [idx, vlId] = el.dataset.devVl.split('.');
+      const d = c.deviations[Number(idx)];
+      if (d.vehicleLineIds.includes(vlId)) d.vehicleLineIds = d.vehicleLineIds.filter(x => x !== vlId); else d.vehicleLineIds.push(vlId);
+      renderDev();
+    }));
+  }
+  render();
 }
 
 /* ============================================================
@@ -918,32 +1645,63 @@ function setActiveView(view) {
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   location.hash = view;
 }
-document.getElementById('nav').addEventListener('click', e => {
-  const btn = e.target.closest('button[data-view]');
-  if (btn) setActiveView(btn.dataset.view);
-});
 
-document.getElementById('themeToggle').addEventListener('click', () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-});
+function initApp() {
+  document.getElementById('nav').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-view]');
+    if (!btn) return;
+    setActiveView(btn.dataset.view);
+    if (btn.dataset.view === 'dashboard') renderDashboard();
+    else if (btn.dataset.view === 'programme') renderProgramme();
+    else if (btn.dataset.view === 'vehicles') refreshVehicleDetail();
+    else if (btn.dataset.view === 'components') renderComponentTable();
+  });
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+  document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('modalOverlay').hidden) closeModal(); });
+
+  document.getElementById('hideSignedOffDash').addEventListener('change', renderDashboard);
+  document.getElementById('attentionSort').addEventListener('change', renderDashboard);
+  document.getElementById('addBrandBtn').addEventListener('click', addBrand);
+  document.getElementById('newVlineBtn').addEventListener('click', () => openAddModelYearModal({}));
+  document.getElementById('newComponentBtn').addEventListener('click', openNewComponentModal);
+  ['vlineSearch', 'vlineBrandFilter', 'hideSignedOffVlines'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderVehicleList);
+    document.getElementById(id).addEventListener('change', renderVehicleList);
+  });
+  ['compSearch', 'filterVline', 'filterGrade', 'filterEmc', 'filterFusa', 'filterCyber'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderComponentTable);
+    document.getElementById(id).addEventListener('change', renderComponentTable);
+  });
+
+  renderDashboard();
+  renderProgramme();
+  renderVehicleList();
+  renderVehicleDetail();
+  populateComponentFilters();
+  renderComponentTable();
+
+  const initialView = (location.hash || '#dashboard').replace('#', '');
+  if (['dashboard', 'programme', 'vehicles', 'components', 'roadmap'].includes(initialView)) setActiveView(initialView);
+}
 
 /* ============================================================
-   INIT
+   INIT — route to the ticket page if this tab was opened as a ticket link
    ============================================================ */
-renderDashboard();
-renderVehicleList();
-renderVehicleDetail();
-populateComponentFilters();
-renderComponentTable();
-renderComponentDetail();
-['compSearch', 'filterVline', 'filterGrade', 'filterEmc'].forEach(id => {
-  document.getElementById(id).addEventListener('input', renderComponentTable);
-  document.getElementById(id).addEventListener('change', renderComponentTable);
-});
-
-const initialView = (location.hash || '#dashboard').replace('#', '');
-if (['dashboard','vehicles','components','roadmap'].includes(initialView)) setActiveView(initialView);
+if (location.hash.indexOf('#ticket=') === 0) {
+  try {
+    const b64 = location.hash.slice('#ticket='.length);
+    const payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    initTicketPage(payload);
+  } catch (err) {
+    document.body.innerHTML = '<div class="empty-state" style="padding:60px;">Couldn\'t read this ticket link.<br/><span class="mono">' + esc(err.message) + '</span></div>';
+  }
+} else {
+  initApp();
+}
 </script>
 </body>
 </html>
