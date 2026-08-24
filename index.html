@@ -124,7 +124,7 @@
   p.page-sub { color: var(--text-secondary); margin: 0 0 16px; font-size: 13px; }
 
   /* ---------------- Stat tiles ---------------- */
-  .stat-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px; }
   .stat-tile {
     background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
     padding: 14px 16px;
@@ -313,6 +313,8 @@
   .grade-link-card { display:flex; align-items:center; gap:12px; background: color-mix(in srgb, var(--series-1) 8%, var(--surface-1)); border: 1px solid var(--series-1); border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
   .rr-row, .dev-row { border: 1px solid var(--gridline); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
   .rr-row-head, .dev-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .approval-grid { display: flex; flex-wrap: wrap; gap: 14px; }
+  .approval-grid input[type="text"] { width: 100%; font-size: 12px; padding: 5px 8px; }
 </style>
 </head>
 <body class="viz-root">
@@ -330,8 +332,9 @@
     <nav class="nav" id="nav">
       <button data-view="dashboard" class="active">Dashboard</button>
       <button data-view="programme">Programme</button>
-      <button data-view="vehicles">Vehicle Lines</button>
       <button data-view="components">Components</button>
+      <button data-view="vehicles">Vehicle Component Status</button>
+      <button data-view="vehiclecompliance">Vehicle Compliance</button>
       <button data-view="roadmap">Roadmap</button>
     </nav>
     <div class="topbar-right">
@@ -358,6 +361,13 @@
           <div><div class="card-title">Overall vehicle status</div><div class="card-sub">Next gateway and open-issue summary per vehicle line, most urgent first</div></div>
         </div>
         <div id="overallStatusWrap"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">Vehicle compliance</div><div class="card-sub">EMC to ECE Reg 10, corporate EMC, and cyber sign-off to Reg 155 — click a row for the full workflow</div></div>
+        </div>
+        <div id="dashVcWrap"></div>
       </div>
 
       <div class="two-col">
@@ -389,16 +399,39 @@
     <!-- ============ PROGRAMME ============ -->
     <section id="view-programme" class="view" hidden>
       <h1 class="page-title">Vehicle programme</h1>
-      <p class="page-sub">Define JLR programme activity — brand, vehicle line, then each model year's programme timing. This feeds the Vehicle Lines tab directly.</p>
+      <p class="page-sub">Define JLR programme activity — brand, vehicle line, then each model year's programme timing. This feeds the Vehicle Component Status tab directly.</p>
       <div class="vfilter-row">
         <button class="theme-toggle" id="addBrandBtn">+ Add brand</button>
       </div>
       <div id="programmeWrap"></div>
     </section>
 
-    <!-- ============ VEHICLE LINES ============ -->
+    <!-- ============ COMPONENTS ============ -->
+    <section id="view-components" class="view" hidden>
+      <h1 class="page-title">Components</h1>
+      <p class="page-sub">Search the component register; open a component to view its full ticket in a new tab.</p>
+
+      <div class="card">
+        <div class="filter-row">
+          <input type="text" id="compSearch" placeholder="Search by name, part number, supplier, engineer…" />
+          <select id="filterProgramme"><option value="">All programmes</option></select>
+          <select id="filterVline"><option value="">All vehicle lines</option></select>
+          <select id="filterGrade"><option value="">Any GRADE status</option></select>
+          <select id="filterEmc"><option value="">Any EMC status</option></select>
+          <select id="filterFusa"><option value="">Any FUSA status</option></select>
+          <select id="filterCyber"><option value="">Any Cyber status</option></select>
+        </div>
+        <div class="filter-row">
+          <button class="theme-toggle primary" id="newComponentBtn">+ New component</button>
+        </div>
+        <div class="result-count" id="compCount"></div>
+        <div style="overflow-x:auto;"><div id="compTableWrap"></div></div>
+      </div>
+    </section>
+
+    <!-- ============ VEHICLE COMPONENT STATUS ============ -->
     <section id="view-vehicles" class="view" hidden>
-      <h1 class="page-title">Vehicle lines</h1>
+      <h1 class="page-title">Vehicle component status</h1>
       <p class="page-sub">Engineering gateway timing and the components fitted to each programme / model year. Ordered by next gateway date — the most urgent sits at the top.</p>
       <div class="vfilter-row">
         <input type="text" id="vlineSearch" placeholder="Search nameplate or programme…" />
@@ -412,25 +445,13 @@
       </div>
     </section>
 
-    <!-- ============ COMPONENTS ============ -->
-    <section id="view-components" class="view" hidden>
-      <h1 class="page-title">Components</h1>
-      <p class="page-sub">Search the component register; open a component to view its full ticket in a new tab.</p>
-
-      <div class="card">
-        <div class="filter-row">
-          <input type="text" id="compSearch" placeholder="Search by name, part number, supplier, engineer…" />
-          <select id="filterVline"><option value="">All vehicle lines</option></select>
-          <select id="filterGrade"><option value="">Any GRADE status</option></select>
-          <select id="filterEmc"><option value="">Any EMC status</option></select>
-          <select id="filterFusa"><option value="">Any FUSA status</option></select>
-          <select id="filterCyber"><option value="">Any Cyber status</option></select>
-        </div>
-        <div class="filter-row">
-          <button class="theme-toggle primary" id="newComponentBtn">+ New component</button>
-        </div>
-        <div class="result-count" id="compCount"></div>
-        <div style="overflow-x:auto;"><div id="compTableWrap"></div></div>
+    <!-- ============ VEHICLE COMPLIANCE ============ -->
+    <section id="view-vehiclecompliance" class="view" hidden>
+      <h1 class="page-title">Vehicle compliance</h1>
+      <p class="page-sub">Vehicle-level regulatory sign-off — EMC to ECE Reg 10, corporate EMC, and cyber security sign-off to Reg 155.</p>
+      <div class="two-col" style="grid-template-columns: 300px 1fr;">
+        <div class="vline-list" id="vcList"></div>
+        <div id="vcDetail"></div>
       </div>
     </section>
 
@@ -498,6 +519,7 @@ function pickWeighted(pairs) {
 function randInt(min, max) { return Math.floor(rand() * (max - min + 1)) + min; }
 function fmtDate(d) { return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function addDays(base, days) { const d = new Date(base); d.setDate(d.getDate() + days); return d; }
+function isoDate(d) { return d.toISOString().slice(0, 10); }
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function badge(label, tone) { return `<span class="badge tone-${tone}"><span class="dot tone-${tone}"></span>${esc(label)}</span>`; }
 function selectOpts(list, current) { return list.map(s => `<option value="${esc(s)}" ${s===current?'selected':''}>${esc(s)}</option>`).join(''); }
@@ -632,6 +654,7 @@ function flattenProgramme() {
       systemJudgement: my.systemJudgement, designFreeze: my.designFreeze, prodReview: my.prodReview, signOff: my.signOff,
       signOffDate: signOff, daysToSignOff, phase, phaseLabel,
       systemJudgementDate: new Date(my.systemJudgement), designFreezeDate: new Date(my.designFreeze), prodReviewDate: new Date(my.prodReview),
+      derivedFromMyId: my.derivedFromMyId || null, derivedFromLabel: my.derivedFromLabel || '',
     });
   })));
   return flat;
@@ -673,6 +696,23 @@ function parsePartNumber(raw) {
   if (parts.length >= 3) return { prefix: parts[0], base: parts[1], suffix: parts.slice(2).join('-') };
   return { prefix: '', base: raw, suffix: '' };
 }
+// One suffix / revision row in a component's part-number history. scrRef/testingRequired/changeInProgress
+// carry the SCR-driven change workflow: flip changeInProgress on the row a change is being made against,
+// and the new row created for the incoming suffix records what testing it needs and its own compliance status.
+function makeSuffixRow(overrides) {
+  return Object.assign({
+    suffix: '', derivedFrom: null, dateIntroduced: '', complianceStatus: 'Compliance underway',
+    approvedDerivativeOfSuffix: '', note: '', scrRef: '', testingRequired: '', changeInProgress: false,
+  }, overrides);
+}
+// "What's Changed" log: one entry per SCR/MOC against a specific hardware part number + suffix, with a
+// Semi-C (semiconductor content) BOM confirmation and manager approval boxes across the five review areas.
+const APPROVAL_AREAS = [['emc', 'EMC'], ['grade', 'GRADE'], ['hardwareCompliance', 'Hardware Compliance'], ['fusa', 'FUSA'], ['cyber', 'Cyber']];
+function makeChangeEntry(overrides) {
+  const approvals = {};
+  APPROVAL_AREAS.forEach(([key]) => approvals[key] = { approved: false, approver: '', date: '' });
+  return Object.assign({ partNumberSuffix: '', scrRef: '', descriptor: '', semiCBomConfirmed: false, semiCBomLink: '', approvals }, overrides);
+}
 
 const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
   const id = 'c' + (i + 1);
@@ -685,11 +725,114 @@ const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
     hardwareType: pick(HARDWARE_TYPES), functionalClass: pick(FUNCTIONAL_CLASS), buildStage: pick(BUILD_STAGES),
     dtNumber: 'DT' + randInt(10000, 99999) + '-' + randInt(1, 9), vehicleLineIds,
     rrPlans: [], deviations: [],
+    overview: { launchDate: '', historyNotes: '', linkedParts: [] },
+    suffixHistory: [],
+    prerequisites: [
+      { label: 'Current draw', value: '' },
+      { label: 'Quiescent current (QI)', value: '' },
+    ],
+    changeLog: [],
+    hardwareCompliance: { transceivers: [], replaceableBattery: false, marketList: [], blockedMarkets: [] },
   };
 });
 let compCounter = COMPONENTS.length;
 
+const LINKED_PART_NAMES = ['Headlamp Control Module (HCM)', 'LED Driver Board', 'LED Light Source Array', 'Embedded MCU', 'Connector Sub-Assembly', 'DC-DC Regulator Module'];
+const LINKED_PART_ROLES = ['Embedded control module', 'LED driver', 'Light source, plugged into housing', 'Embedded sensor', 'Sourced sub-assembly', 'Power module'];
+const HISTORY_NOTES = [
+  'Carried over from prior-generation platform with minor packaging changes.',
+  'New design introduced for this platform generation.',
+  'Inherited from sister-brand programme, re-validated for this application.',
+  'Long-running part family, periodically refreshed for supplier/process changes.',
+];
+
 COMPONENTS.forEach(c => {
+  // ---- Component Overview: launch history ----
+  const daysSinceLaunch = randInt(400, 2600);
+  const launch = addDays(TODAY, -daysSinceLaunch);
+  c.overview.launchDate = isoDate(launch);
+  c.overview.historyNotes = pick(HISTORY_NOTES);
+
+  // ---- Part number suffix / derivative history ----
+  // Identity = prefix + base (set already in partNumber). Suffixes below represent revisions over time;
+  // "derivedFrom" lets a suffix branch off any prior suffix, so both a simple sequential chain (AA -> AB -> AC)
+  // and a branching one (AB and AC both derived from AA, e.g. market-specific variants) use the same shape.
+  // Offsets are clamped so an introduced-date never lands after TODAY.
+  const maxOffset = daysSinceLaunch - 30;
+  const complianceRoll = () => pick(['Approved compliant', 'Approved compliant', 'Approved compliant', 'Compliance underway', 'Approved derivative of']);
+  c.suffixHistory.push(makeSuffixRow({ suffix: 'AA', dateIntroduced: isoDate(launch), complianceStatus: 'Approved compliant', note: 'Original release.' }));
+  let currentSuffix = 'AA';
+  const shape = rand();
+  if (shape < 0.15) {
+    // simple sequential revision
+    const status = complianceRoll();
+    c.suffixHistory.push(makeSuffixRow({
+      suffix: 'AB', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(200, Math.min(1400, maxOffset)))),
+      complianceStatus: status, approvedDerivativeOfSuffix: status === 'Approved derivative of' ? 'AA' : '',
+      note: pick(['Supplier process change.', 'Minor design update.', 'Component re-sourced, form/fit/function unchanged.']),
+    }));
+    currentSuffix = 'AB';
+  } else if (shape < 0.30) {
+    // branching — market-specific derivatives, both off the same parent suffix
+    const status1 = complianceRoll(); const status2 = complianceRoll();
+    c.suffixHistory.push(makeSuffixRow({ suffix: 'AB', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(200, Math.min(1000, maxOffset)))), complianceStatus: status1, approvedDerivativeOfSuffix: status1 === 'Approved derivative of' ? 'AA' : '', note: 'EU-market unique derivative.' }));
+    c.suffixHistory.push(makeSuffixRow({ suffix: 'AC', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(220, Math.min(1100, maxOffset)))), complianceStatus: status2, approvedDerivativeOfSuffix: status2 === 'Approved derivative of' ? 'AA' : '', note: 'China-market unique variant.' }));
+    currentSuffix = pick(['AB', 'AC']);
+  }
+  c.partNumber.suffix = currentSuffix;
+
+  // ---- Linked parts (e.g. a headlamp housing an HCM plugged into LEDs/drivers from other suppliers) ----
+  if (rand() < 0.22) {
+    const nLinked = randInt(1, 2);
+    for (let i = 0; i < nLinked; i++) {
+      c.overview.linkedParts.push({
+        name: pick(LINKED_PART_NAMES),
+        partNumber: `${pick(PART_PREFIXES)}-${randInt(100000, 999999)}-${pick(['AA', 'AB'])}`,
+        supplier: pick(SUPPLIERS),
+        relationship: pick(LINKED_PART_ROLES),
+      });
+    }
+  }
+
+  // ---- Hardware compliance: transmitters/receivers, battery, market list ----
+  const looksWireless = /Keyless|Tyre Pressure|Trailer Assist|Infotainment|Digital Radio|Head-Up|Rain Sensor|Night Vision/.test(name);
+  if (looksWireless || rand() < 0.15) {
+    const nTx = randInt(1, 2);
+    for (let i = 0; i < nTx; i++) {
+      c.hardwareCompliance.transceivers.push({
+        type: pick(['Transmitter', 'Receiver', 'Transceiver']),
+        description: pick(['Short-range keyless RF link', 'Bluetooth Low Energy module', 'TPMS RF sensor link', 'Wi-Fi/cellular telematics module', 'UHF remote link']),
+        frequency: pick(['433 MHz', '315 MHz', '868 MHz', '2.4 GHz', '5.9 GHz']),
+        power: pick(['< 10 mW', '10–25 mW', '25–100 mW', '< 100 mW EIRP']),
+      });
+    }
+    c.hardwareCompliance.replaceableBattery = rand() < 0.35;
+    c.hardwareCompliance.marketList = ['UK', 'EU', 'US', 'China', 'Japan', 'South Korea', 'Australia'].filter(() => rand() < 0.7);
+    if (rand() < 0.2) {
+      c.hardwareCompliance.blockedMarkets.push({
+        market: pick(['Russia', 'Iran', 'North Korea', 'Syria']),
+        reason: pick(['Export sanctions', 'No local type approval', 'Approval expired, renewal pending']),
+      });
+    }
+  }
+
+  // ---- What's Changed: a demo SCR/MOC entry for components mid-revision ----
+  if (c.suffixHistory.length > 1 && rand() < 0.5) {
+    const entry = makeChangeEntry({
+      partNumberSuffix: c.partNumber.suffix,
+      scrRef: 'SCR-' + randInt(10000, 99999),
+      descriptor: pick(['Supplier changed connector sealant.', 'PCB re-spin for component obsolescence.', 'Market-specific derivative introduced.', 'Firmware update bundled with hardware change.']),
+      semiCBomConfirmed: rand() < 0.6,
+      semiCBomLink: rand() < 0.5 ? 'https://bom-tracker.example.jlr/parts/' + c.partNumber.base : '',
+    });
+    APPROVAL_AREAS.forEach(([key]) => {
+      if (rand() < 0.4) {
+        entry.approvals[key] = { approved: true, approver: pick(ENGINEERS), date: isoDate(addDays(TODAY, -randInt(1, 120))) };
+      }
+    });
+    c.changeLog.push(entry);
+  }
+
   if (rand() < 0.25) {
     c.rrPlans.push({
       planNumber: 'CF-' + randInt(100000, 999999), area: pick(['GRADE', 'EMC', 'Functional Safety', 'Cyber Security']),
@@ -842,6 +985,23 @@ function statTile(label, value, foot, tone) {
 }
 
 /* ============================================================
+   PART NUMBER / SUFFIX COMPLIANCE HELPERS
+   identity = prefix + base; suffixes are revisions, tracked with a
+   "derivedFrom" parent pointer so both a simple sequential chain and a
+   branching one (two suffixes off the same parent) use the same shape.
+   ============================================================ */
+function currentSuffixRecord(c) {
+  return (c.suffixHistory || []).find(s => s.suffix === c.partNumber.suffix) || (c.suffixHistory || [])[c.suffixHistory.length - 1];
+}
+function overallComplianceInfo(c) {
+  const cur = currentSuffixRecord(c);
+  if (!cur) return { label: 'Compliance underway', tone: 'warning' };
+  if (cur.complianceStatus === 'Approved compliant') return { label: 'Approved compliant', tone: 'good' };
+  if (cur.complianceStatus === 'Approved derivative of') return { label: `Approved — same as ${cur.approvedDerivativeOfSuffix || '—'}`, tone: 'good' };
+  return { label: 'Compliance underway', tone: 'warning' };
+}
+
+/* ============================================================
    DASHBOARD
    ============================================================ */
 function renderDashboard() {
@@ -851,26 +1011,40 @@ function renderDashboard() {
   const activeIds = new Set(activeLines.map(v => v.id));
   const activeRecords = RECORDS.filter(r => activeIds.has(r.vehicleLineId));
 
-  const totalComponents = new Set(activeRecords.map(r => r.componentId)).size;
-  const totalLines = activeLines.length;
+  // Components actually fitted to a live (active) vehicle line only — unassigned components excluded.
+  const liveComponents = COMPONENTS.filter(c => c.vehicleLineIds.some(id => activeIds.has(id)));
+  // Count product identity as prefix + base only — suffix revisions of the same product are not counted separately.
+  const liveProductIdentities = new Set(liveComponents.map(c => `${c.partNumber.prefix}-${c.partNumber.base}`));
+
+  // Change requests: R&R plans (always in-flight in this model) + deviations not yet permanently closed out.
+  const liveChangeRequests = liveComponents.reduce((sum, c) => {
+    const openRR = c.rrPlans.filter(p => p.status !== 'Closed').length;
+    const openDev = c.deviations.filter(d => d.status !== 'Approved - Permanent' && d.status !== 'Closed').length;
+    return sum + openRR + openDev;
+  }, 0);
+
+  // Vehicle sign-offs live right now: lines in late programme, sign-off gate imminent and not yet passed.
+  const liveVehicleSignOffs = activeLines.filter(v => v.phase === 'late').length;
+
   const totalRecords = activeRecords.length;
-  const gradeComplete = activeRecords.filter(r => r.grade.status === 'Complete').length;
-  const emcCompliant = activeRecords.filter(r => r.emc.resultStatus === 'Compliant').length;
-  const openIssuesSum = activeRecords.reduce((s, r) => s + r.grade.openIssues, 0);
   const attention = activeRecords.filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3);
 
-  document.getElementById('statRow').innerHTML = totalRecords ? `
-    ${statTile('Components tracked', totalComponents.toLocaleString(), totalLines + ' vehicle lines')}
-    ${statTile('GRADE + EMC records', totalRecords.toLocaleString(), 'one record per component / vehicle line')}
-    ${statTile('GRADE complete', Math.round(gradeComplete / totalRecords * 100) + '%', gradeComplete + ' of ' + totalRecords + ' records', 'good')}
-    ${statTile('EMC compliant', Math.round(emcCompliant / totalRecords * 100) + '%', emcCompliant + ' of ' + totalRecords + ' records', 'good')}
-    ${statTile('Open GRADE issues', openIssuesSum.toLocaleString(), 'summed across all records')}
+  document.getElementById('statRow').innerHTML = `
+    ${statTile('Live car lines', activeLines.length.toLocaleString(), 'vehicle lines currently being worked')}
+    ${statTile('Live components', liveProductIdentities.size.toLocaleString(), 'unique prefix + base, fitted to a live car line')}
+    ${statTile('Live change requests', liveChangeRequests.toLocaleString(), 'open R&amp;R plans + unresolved deviations')}
+    ${statTile('Live vehicle sign-offs', liveVehicleSignOffs.toLocaleString(), 'late programme, gate not yet passed')}
     ${statTile('Needs attention', attention.length.toLocaleString(), 'non-compliant or high open-issue count', attention.length ? 'critical' : 'good')}
-  ` : `${statTile('Components tracked','0','no vehicle lines shown')}`.repeat(1);
+  `;
 
   document.getElementById('overallStatusWrap').innerHTML = renderOverallStatusTile(activeLines);
   document.querySelectorAll('#overallStatusWrap tbody tr').forEach(tr => tr.addEventListener('click', () => {
     selectedVlineId = tr.dataset.vline; setActiveView('vehicles'); refreshVehicleDetail();
+  }));
+
+  document.getElementById('dashVcWrap').innerHTML = renderDashboardVehicleComplianceTile(activeLines);
+  document.querySelectorAll('#dashVcWrap tbody tr').forEach(tr => tr.addEventListener('click', () => {
+    selectedVlineId = tr.dataset.vline; setActiveView('vehiclecompliance'); refreshComplianceDetail();
   }));
 
   const gradeAll = {}; GRADE_STAGES.forEach(s => gradeAll[s] = 0);
@@ -904,6 +1078,21 @@ function renderDashboard() {
   renderAttentionTable(activeRecords);
 }
 
+function renderDashboardVehicleComplianceTile(lines) {
+  if (!lines.length) return '<div class="empty-state">No vehicle lines to show.</div>';
+  const sorted = [...lines].sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
+  const rows = sorted.map(vl => {
+    const vc = getVehicleCompliance(vl.id);
+    return `<tr data-vline="${vl.id}">
+      <td>${esc(vl.nameplate)} ${vl.my}<div class="cell-sub">${esc(vl.programme)}</div></td>
+      <td>${badge(vc.emcR10.status, VC_TONE[vc.emcR10.status])}<div class="cell-sub">${esc(vc.emcR10.regRevision)}</div></td>
+      <td>${badge(vc.corporateEmc.status, VC_TONE[vc.corporateEmc.status])}</td>
+      <td>${badge(vc.cyberR155.status, VC_TONE[vc.cyberR155.status])}</td>
+      <td>${vc.approved ? badge('Signed off', 'good') : badge('Pending', 'neutral')}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="simple"><thead><tr><th>Vehicle line</th><th>EMC to ECE R10</th><th>Corporate EMC</th><th>Cyber (Reg 155)</th><th>Sign-off</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
 function renderOverallStatusTile(lines) {
   if (!lines.length) return '<div class="empty-state">No vehicle lines to show.</div>';
   const sorted = [...lines].sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
@@ -974,7 +1163,7 @@ function renderVlineBlock(b, vl) {
   const myRows = vl.modelYears.map(my => {
     const inst = VEHICLE_LINES.find(v => v.id === my.id);
     return `<div class="pgm-my-row">
-      <div><span class="pgm-my-label">${esc(vl.name)} ${esc(my.label)}</span> ${inst ? badge(inst.phaseLabel, PHASE_TONE[inst.phase]) : ''}
+      <div><span class="pgm-my-label">${esc(vl.name)} ${esc(my.label)}</span> ${inst ? badge(inst.phaseLabel, PHASE_TONE[inst.phase]) : ''} ${my.derivedFromLabel ? badge(`Derivative of ${my.derivedFromLabel}`, 'neutral') : ''}
         <div class="pgm-gates">SJ ${esc(my.systemJudgement)} · DF ${esc(my.designFreeze)} · PR ${esc(my.prodReview)} · SO ${esc(my.signOff)}</div>
       </div>
       <button class="icon-btn" data-del-my data-brand="${b.id}" data-vline="${vl.id}" data-my="${my.id}" title="Remove model year">✕</button>
@@ -1073,7 +1262,7 @@ function openAddModelYearModal(preset) {
   const presetVl = preset.vehicleLineId ? findVline(preset.brandId, preset.vehicleLineId) : null;
   body.innerHTML = `
     <h2>Add a new model year</h2>
-    <p class="modal-sub">Define the vehicle line and programme timing. This appears immediately in Vehicle Lines and the Dashboard.</p>
+    <p class="modal-sub">Define the vehicle line and programme timing. This appears immediately in Vehicle Component Status and the Dashboard.</p>
     ${!preset.vehicleLineId ? `
     <div class="modal-grid2">
       <div class="field"><label>Brand</label><select id="mySelBrand">${brandOptions}</select></div>
@@ -1145,6 +1334,12 @@ function openAddModelYearModal(preset) {
     const newMy = { id: 'vl' + (++vlCounter), label, systemJudgement: g1, designFreeze: g2, prodReview: g3, signOff: g4 };
     vl.modelYears.push(newMy);
     const carryFrom = document.getElementById('myCarryOver').value;
+    if (carryFrom) {
+      // Carrying over the component list from a prior model year records that this one is a derivative of it.
+      const sourceMy = vl.modelYears.find(m => m.id === carryFrom);
+      newMy.derivedFromMyId = carryFrom;
+      newMy.derivedFromLabel = sourceMy ? sourceMy.label : '';
+    }
     rebuildVehicleLines();
     if (carryFrom) {
       COMPONENTS.forEach(c => { if (c.vehicleLineIds.includes(carryFrom) && !c.vehicleLineIds.includes(newMy.id)) { c.vehicleLineIds.push(newMy.id); ensureRecordsForComponent(c); } });
@@ -1238,7 +1433,7 @@ function renderVehicleDetail() {
   document.getElementById('vlineDetail').innerHTML = `
     <div class="card">
       <div class="card-head">
-        <div><div class="card-title">${esc(vl.nameplate)} — ${vl.my}</div><div class="card-sub">Programme ${esc(vl.programme)} · ${vl.phaseLabel}</div></div>
+        <div><div class="card-title">${esc(vl.nameplate)} — ${vl.my}</div><div class="card-sub">Programme ${esc(vl.programme)} · ${vl.phaseLabel}${vl.derivedFromLabel ? ` · derivative of ${esc(vl.derivedFromLabel)}` : ''}</div></div>
         ${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}
       </div>
       <div class="gate-track">${gateHtml}</div>
@@ -1274,6 +1469,176 @@ function renderVehicleDetail() {
 }
 
 /* ============================================================
+   VEHICLE COMPLIANCE — vehicle-level regulatory sign-off (EMC to ECE Reg 10,
+   corporate EMC, cyber to Reg 155). Kept in a separate store keyed by vehicle
+   line id (not on the VEHICLE_LINES objects themselves) because VEHICLE_LINES
+   is wholesale-rebuilt from PROGRAMME on every programme edit.
+   ============================================================ */
+const VEHICLE_COMPLIANCE = {};
+const VC_STAGES = ['Not started', 'In progress', 'Complete'];
+const VC_TONE = { 'Not started': 'neutral', 'In progress': 'progress', 'Complete': 'good' };
+const R10_REVISIONS = ['Reg 10.05', 'Reg 10.06', 'Reg 10.07'];
+function makeVehicleComplianceRecord() {
+  return {
+    emcR10: { regRevision: 'Reg 10.06', status: 'Not started', notes: '' },
+    corporateEmc: { status: 'Not started', notes: '' },
+    cyberR155: { status: 'Not started', notes: '' },
+    testReports: [],
+    deviationImports: [],
+    approved: false, approver: '', approvedDate: '',
+  };
+}
+function getVehicleCompliance(vlId) {
+  if (!VEHICLE_COMPLIANCE[vlId]) VEHICLE_COMPLIANCE[vlId] = makeVehicleComplianceRecord();
+  return VEHICLE_COMPLIANCE[vlId];
+}
+let vcActiveTab = 'emcr10';
+function renderComplianceList() {
+  const list = VEHICLE_LINES.slice().sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
+  if (!list.find(v => v.id === selectedVlineId) && list.length) selectedVlineId = list[0].id;
+  document.getElementById('vcList').innerHTML = list.length ? list.map(vl => {
+    const vc = getVehicleCompliance(vl.id);
+    return `<div class="vline-item ${vl.id === selectedVlineId ? 'active' : ''}" data-id="${vl.id}">
+      <div>
+        <div class="vline-name">${esc(vl.nameplate)} <span style="color:var(--text-muted); font-weight:500;">${vl.my}</span></div>
+        <div class="vline-code">${esc(vl.programme)}</div>
+      </div>
+      ${vc.approved ? badge('Signed off', 'good') : badge('Pending', 'neutral')}
+    </div>`;
+  }).join('') : '<div class="empty-state">No vehicle lines defined yet — add one in the Programme tab first.</div>';
+  document.querySelectorAll('#vcList .vline-item').forEach(el => el.addEventListener('click', () => {
+    selectedVlineId = el.dataset.id; renderComplianceList(); renderComplianceDetail();
+  }));
+}
+function refreshComplianceDetail() { renderComplianceList(); renderComplianceDetail(); }
+function renderComplianceDetail() {
+  const vl = VEHICLE_LINES.find(v => v.id === selectedVlineId);
+  if (!vl) { document.getElementById('vcDetail').innerHTML = '<div class="empty-state">Select a vehicle line, or add one from the Programme tab.</div>'; return; }
+  const vc = getVehicleCompliance(vl.id);
+  const gates = [['System Judgement', vl.systemJudgementDate], ['Design Freeze', vl.designFreezeDate], ['Production Review', vl.prodReviewDate], ['Vehicle Sign-off', vl.signOffDate]];
+  const gateHtml = gates.map(([label, date]) => {
+    const state = date < TODAY ? 'done' : (date - TODAY < 90 * 86400000 ? 'active' : '');
+    return gateStep(label, date, state);
+  }).join('');
+
+  document.getElementById('vcDetail').innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${esc(vl.nameplate)} — ${vl.my}</div><div class="card-sub">Programme ${esc(vl.programme)} · ${vl.phaseLabel}${vl.derivedFromLabel ? ` · derivative of ${esc(vl.derivedFromLabel)}` : ''}</div></div>
+        ${vc.approved ? badge('Signed off', 'good') : badge('Pending sign-off', 'neutral')}
+      </div>
+      <div class="gate-track">${gateHtml}</div>
+      <div class="tabs" id="vcTabs">
+        <button class="tab-btn ${vcActiveTab==='emcr10'?'active':''}" data-vctab="emcr10">Vehicle EMC to ECE R10</button>
+        <button class="tab-btn ${vcActiveTab==='corpemc'?'active':''}" data-vctab="corpemc">Corporate EMC Sign-off</button>
+        <button class="tab-btn ${vcActiveTab==='cyber155'?'active':''}" data-vctab="cyber155">Cyber Sign-off to Reg 155</button>
+        <button class="tab-btn ${vcActiveTab==='reports'?'active':''}" data-vctab="reports">Test Reports</button>
+        <button class="tab-btn ${vcActiveTab==='deviations'?'active':''}" data-vctab="deviations">Deviations Import</button>
+      </div>
+      <div id="vcTabBody"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Manager sign-off</div><div class="card-sub">Approve this vehicle line for overall compliance sign-off</div></div></div>
+      <label class="toggle-chip ${vc.approved ? 'on' : ''}"><input type="checkbox" id="vcApprove" ${vc.approved ? 'checked' : ''}/> Approved</label>
+      ${vc.approved ? `<div style="margin-top:8px; max-width:280px;"><input type="text" id="vcApprover" placeholder="Approver name" value="${esc(vc.approver || '')}" /><div class="cell-sub" style="margin-top:4px;">${vc.approvedDate ? fmtDate(new Date(vc.approvedDate)) : ''}</div></div>` : ''}
+    </div>
+  `;
+  renderVcTabBody(vc);
+  document.querySelectorAll('#vcTabs .tab-btn').forEach(el => el.addEventListener('click', () => { vcActiveTab = el.dataset.vctab; renderComplianceDetail(); }));
+  const approveEl = document.getElementById('vcApprove');
+  approveEl.addEventListener('change', () => {
+    vc.approved = approveEl.checked;
+    if (vc.approved) { if (!vc.approvedDate) vc.approvedDate = isoDate(TODAY); }
+    else { vc.approver = ''; vc.approvedDate = ''; }
+    renderComplianceList(); renderComplianceDetail();
+  });
+  const approverEl = document.getElementById('vcApprover');
+  if (approverEl) approverEl.addEventListener('blur', () => { vc.approver = approverEl.value; });
+}
+function renderVcTabBody(vc) {
+  const wrap = document.getElementById('vcTabBody');
+  if (vcActiveTab === 'emcr10') {
+    wrap.innerHTML = `
+      <div class="grade-grid">
+        <div class="field-inline"><label>Applicable regulation revision</label><select id="vcR10Rev">${selectOpts(R10_REVISIONS, vc.emcR10.regRevision)}</select></div>
+        <div class="field-inline"><label>Status</label><select id="vcR10Status">${selectOpts(VC_STAGES, vc.emcR10.status)}</select></div>
+      </div>
+      <div class="kv-label">Notes</div>
+      <textarea class="notes" id="vcR10Notes">${esc(vc.emcR10.notes || '')}</textarea>
+    `;
+    document.getElementById('vcR10Rev').addEventListener('change', e => { vc.emcR10.regRevision = e.target.value; });
+    document.getElementById('vcR10Status').addEventListener('change', e => { vc.emcR10.status = e.target.value; renderComplianceList(); });
+    document.getElementById('vcR10Notes').addEventListener('blur', e => { vc.emcR10.notes = e.target.value; });
+  } else if (vcActiveTab === 'corpemc') {
+    wrap.innerHTML = `
+      <div class="field-inline" style="max-width:280px;"><label>Status</label><select id="vcCorpStatus">${selectOpts(VC_STAGES, vc.corporateEmc.status)}</select></div>
+      <div class="kv-label">Notes</div>
+      <textarea class="notes" id="vcCorpNotes">${esc(vc.corporateEmc.notes || '')}</textarea>
+    `;
+    document.getElementById('vcCorpStatus').addEventListener('change', e => { vc.corporateEmc.status = e.target.value; renderComplianceList(); });
+    document.getElementById('vcCorpNotes').addEventListener('blur', e => { vc.corporateEmc.notes = e.target.value; });
+  } else if (vcActiveTab === 'cyber155') {
+    wrap.innerHTML = `
+      <div class="field-inline" style="max-width:280px;"><label>Status</label><select id="vcCyberStatus">${selectOpts(VC_STAGES, vc.cyberR155.status)}</select></div>
+      <div class="kv-label">Notes</div>
+      <textarea class="notes" id="vcCyberNotes">${esc(vc.cyberR155.notes || '')}</textarea>
+    `;
+    document.getElementById('vcCyberStatus').addEventListener('change', e => { vc.cyberR155.status = e.target.value; renderComplianceList(); });
+    document.getElementById('vcCyberNotes').addEventListener('blur', e => { vc.cyberR155.notes = e.target.value; });
+  } else if (vcActiveTab === 'reports') {
+    const rows = vc.testReports.map((r, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(r.name) || 'Test report'}</strong><button class="icon-btn" data-report-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Report name</label><input type="text" data-report="${i}.name" value="${esc(r.name)}" /></div>
+          <div class="field-inline"><label>Location / link</label><input type="text" data-report="${i}.location" value="${esc(r.location)}" placeholder="https://… or file path" /></div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state">No test reports stored yet.</div>';
+    wrap.innerHTML = `
+      <div class="ticket-notice">Repository for vehicle-level test reports (EMC, cyber, etc.) supporting this vehicle line's sign-off.</div>
+      <div class="card-head"><div><div class="card-title">Test reports</div></div><button class="theme-toggle" id="addReport">+ Add test report</button></div>
+      ${rows}
+    `;
+    document.querySelectorAll('[data-report]').forEach(el => {
+      const [idx, key] = el.dataset.report.split('.');
+      el.addEventListener('blur', () => { vc.testReports[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-report-rm]').forEach(el => el.addEventListener('click', () => { vc.testReports.splice(Number(el.dataset.reportRm), 1); renderVcTabBody(vc); }));
+    document.getElementById('addReport').addEventListener('click', () => { vc.testReports.push({ name: '', location: '' }); renderVcTabBody(vc); });
+  } else if (vcActiveTab === 'deviations') {
+    const rows = vc.deviationImports.map((d, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong class="mono">${esc(d.deviationNumber) || 'Deviation'}</strong><button class="icon-btn" data-vcdev-rm="${i}">✕</button></div>
+        <div class="field-inline"><label>Description</label><input type="text" data-vcdev="${i}.description" value="${esc(d.description)}" /></div>
+        <label class="toggle-chip ${d.assessed ? 'on' : ''}" style="margin-top:8px;"><input type="checkbox" data-vcdev-check="${i}" ${d.assessed ? 'checked' : ''}/> Assessed</label>
+      </div>
+    `).join('') || '<div class="empty-state">No deviations imported yet.</div>';
+    wrap.innerHTML = `
+      <div class="ticket-notice">Import a list of components with deviations so they can be assessed for this vehicle line's sign-off. One per line, as "deviation number: description".</div>
+      <div class="field-inline"><label>Paste deviation list</label><textarea class="notes" id="vcDevImportBox" placeholder="DEV-1234: Connector sealant deviation&#10;DEV-5678: Housing colour deviation"></textarea></div>
+      <button class="theme-toggle" id="vcDevImportBtn">Import list</button>
+      <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Imported deviations</div></div></div>
+      ${rows}
+    `;
+    document.getElementById('vcDevImportBtn').addEventListener('click', () => {
+      const lines = document.getElementById('vcDevImportBox').value.split('\n').map(l => l.trim()).filter(Boolean);
+      lines.forEach(line => {
+        const [num, ...rest] = line.split(':');
+        vc.deviationImports.push({ deviationNumber: (num || '').trim(), description: rest.join(':').trim(), assessed: false });
+      });
+      renderVcTabBody(vc);
+    });
+    document.querySelectorAll('[data-vcdev]').forEach(el => {
+      const [idx, key] = el.dataset.vcdev.split('.');
+      el.addEventListener('blur', () => { vc.deviationImports[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-vcdev-check]').forEach(el => el.addEventListener('change', () => { vc.deviationImports[Number(el.dataset.vcdevCheck)].assessed = el.checked; }));
+    document.querySelectorAll('[data-vcdev-rm]').forEach(el => el.addEventListener('click', () => { vc.deviationImports.splice(Number(el.dataset.vcdevRm), 1); renderVcTabBody(vc); }));
+  }
+}
+
+/* ============================================================
    COMPONENTS VIEW
    ============================================================ */
 function populateVlineFilterSelect() {
@@ -1282,8 +1647,16 @@ function populateVlineFilterSelect() {
   vlSel.innerHTML = '<option value="">All vehicle lines</option>' + VEHICLE_LINES.map(vl => `<option value="${vl.id}">${esc(vl.nameplate)} ${vl.my}</option>`).join('');
   vlSel.value = cur;
 }
+function populateProgrammeFilterSelect() {
+  const pSel = document.getElementById('filterProgramme');
+  const cur = pSel.value;
+  const programmes = [...new Set(VEHICLE_LINES.map(vl => vl.programme))].sort();
+  pSel.innerHTML = '<option value="">All programmes</option>' + programmes.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  pSel.value = cur;
+}
 function populateComponentFilters() {
   populateVlineFilterSelect();
+  populateProgrammeFilterSelect();
   const gSel = document.getElementById('filterGrade'); GRADE_STAGES.forEach(s => gSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
   const eSel = document.getElementById('filterEmc'); EMC_OVERALL_ORDER.forEach(s => eSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
   const fSel = document.getElementById('filterFusa'); FUSA_STAGES.forEach(s => fSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
@@ -1291,14 +1664,18 @@ function populateComponentFilters() {
 }
 function renderComponentTable() {
   populateVlineFilterSelect();
+  populateProgrammeFilterSelect();
   const q = document.getElementById('compSearch').value.trim().toLowerCase();
+  const fProgramme = document.getElementById('filterProgramme').value;
   const fVline = document.getElementById('filterVline').value;
   const fGrade = document.getElementById('filterGrade').value;
   const fEmc = document.getElementById('filterEmc').value;
   const fFusa = document.getElementById('filterFusa').value;
   const fCyber = document.getElementById('filterCyber').value;
+  const programmeVlineIds = fProgramme ? new Set(VEHICLE_LINES.filter(vl => vl.programme === fProgramme).map(vl => vl.id)) : null;
 
   let list = COMPONENTS.filter(c => {
+    if (programmeVlineIds && !c.vehicleLineIds.some(id => programmeVlineIds.has(id))) return false;
     if (fVline && !c.vehicleLineIds.includes(fVline)) return false;
     const s = componentSummary(c);
     if (fGrade && s.worstGrade !== fGrade) return false;
@@ -1386,8 +1763,10 @@ function openNewComponentModal() {
     if (!name) { alert('Enter a component name.'); return; }
     const partRaw = document.getElementById('ncPart').value.trim();
     const id = 'c' + (++compCounter);
+    const partNumber = partRaw ? parsePartNumber(partRaw) : makePartNumber();
+    if (!partNumber.suffix) partNumber.suffix = 'AA';
     const c = {
-      id, name, partNumber: partRaw ? parsePartNumber(partRaw) : makePartNumber(),
+      id, name, partNumber,
       supplier: document.getElementById('ncSupplier').value.trim() || 'TBC',
       engineer: document.getElementById('ncEngineer').value.trim() || 'TBC',
       packageLocation: document.getElementById('ncLocation').value.trim() || 'TBC',
@@ -1395,6 +1774,14 @@ function openNewComponentModal() {
       buildStage: document.getElementById('ncBuildStage').value,
       dtNumber: document.getElementById('ncDt').value.trim() || '—',
       vehicleLineIds: [...selectedVl], rrPlans: [], deviations: [],
+      overview: { launchDate: isoDate(TODAY), historyNotes: 'New component — no history recorded yet.', linkedParts: [] },
+      suffixHistory: [makeSuffixRow({ suffix: partNumber.suffix, dateIntroduced: isoDate(TODAY), complianceStatus: 'Compliance underway', note: 'Newly added component.' })],
+      prerequisites: [
+        { label: 'Current draw', value: '' },
+        { label: 'Quiescent current (QI)', value: '' },
+      ],
+      changeLog: [],
+      hardwareCompliance: { transceivers: [], replaceableBattery: false, marketList: [], blockedMarkets: [] },
     };
     COMPONENTS.push(c);
     ensureRecordsForComponent(c);
@@ -1417,7 +1804,8 @@ function openComponentTicket(componentId, vehicleLineId) {
   const payload = { component: c, vehicleLines: vlList, records, initialVline: (vehicleLineId && vlIds.includes(vehicleLineId)) ? vehicleLineId : vlIds[0] };
   const json = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(json)));
-  window.open(location.pathname + '#ticket=' + b64, '_blank');
+  location.href = location.pathname + '#ticket=' + b64;
+  location.reload();
 }
 
 function initTicketPage(payload) {
@@ -1428,6 +1816,7 @@ function initTicketPage(payload) {
         <div class="brand"><div class="brand-title">EE Assurance Tracker</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
         <div class="topbar-right" style="margin-left:auto;">
           <span class="demo-pill">Ticket view</span>
+          <button class="theme-toggle" id="backToTrackerBtn">← Back to tracker</button>
           <button class="theme-toggle" id="exportTicketBtn">Export ticket (JSON)</button>
           <button class="theme-toggle" id="themeToggle">◐ Theme</button>
         </div>
@@ -1440,13 +1829,17 @@ function initTicketPage(payload) {
     const cur = document.documentElement.getAttribute('data-theme');
     document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
   });
+  document.getElementById('backToTrackerBtn').addEventListener('click', () => {
+    location.href = location.pathname;
+    location.reload();
+  });
   document.getElementById('exportTicketBtn').addEventListener('click', () => {
     download(`${payload.component.name.replace(/[^a-z0-9]+/gi, '-')}_ticket.json`, JSON.stringify(payload, null, 2), 'application/json');
   });
 
   const c = payload.component;
   let currentVl = payload.initialVline;
-  let activeTab = 'grade';
+  let activeTab = 'overview';
   const records = {}; payload.records.forEach(r => records[r.vehicleLineId] = r);
 
   function render() {
@@ -1471,10 +1864,14 @@ function initTicketPage(payload) {
           <div><div class="kv-label">DT number(s)</div><div class="kv-value mono">${esc(c.dtNumber)}</div></div>
         </div>
         <div class="tabs" id="ticketTabs">
+          <button class="tab-btn ${activeTab==='overview'?'active':''}" data-tab="overview">Component Overview</button>
+          <button class="tab-btn ${activeTab==='prereq'?'active':''}" data-tab="prereq">Pre-requisite Info</button>
+          <button class="tab-btn ${activeTab==='changelog'?'active':''}" data-tab="changelog">What's Changed</button>
           <button class="tab-btn ${activeTab==='grade'?'active':''}" data-tab="grade">GRADE</button>
           <button class="tab-btn ${activeTab==='emc'?'active':''}" data-tab="emc">EMC</button>
           <button class="tab-btn ${activeTab==='fusa'?'active':''}" data-tab="fusa">Functional Safety</button>
           <button class="tab-btn ${activeTab==='cyber'?'active':''}" data-tab="cyber">Cyber Security</button>
+          <button class="tab-btn ${activeTab==='hardware'?'active':''}" data-tab="hardware">Hardware Compliance</button>
         </div>
         <div id="ticketTabBody"></div>
       </div>
@@ -1497,11 +1894,290 @@ function initTicketPage(payload) {
 
   function renderTabBody(rec, vl) {
     const wrap = document.getElementById('ticketTabBody');
+    if (activeTab === 'overview') { wrap.innerHTML = overviewTabHtml(c); wireOverviewInputs(); return; }
+    if (activeTab === 'prereq') { wrap.innerHTML = prereqTabHtml(c); wirePrereqInputs(); return; }
+    if (activeTab === 'changelog') { wrap.innerHTML = changeLogTabHtml(c); wireChangeLogInputs(); return; }
+    if (activeTab === 'hardware') { wrap.innerHTML = hardwareTabHtml(c); wireHardwareInputs(); return; }
     if (activeTab === 'grade') wrap.innerHTML = gradeTabHtml(rec);
     else if (activeTab === 'emc') wrap.innerHTML = emcTabHtml(rec);
     else if (activeTab === 'fusa') wrap.innerHTML = genericTabHtml(rec.fusa, FUSA_STAGES, 'Functional safety');
     else wrap.innerHTML = genericTabHtml(rec.cyber, CYBER_STAGES, 'Cyber security');
     wireTabInputs(rec);
+  }
+  function nextSuffixCode(existing) {
+    const used = new Set(existing);
+    for (let i = 0; i < 26 * 26; i++) {
+      const code = String.fromCharCode(65 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26));
+      if (!used.has(code)) return code;
+    }
+    return 'ZZ';
+  }
+  function overviewTabHtml(c) {
+    const compliance = overallComplianceInfo(c);
+    const suffixRows = c.suffixHistory.map((s, i) => {
+      const otherSuffixes = c.suffixHistory.filter((s2, j) => j !== i).map(s2 => s2.suffix);
+      return `<div class="rr-row">
+        <div class="rr-row-head">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <strong class="mono">Suffix ${esc(s.suffix)}</strong>
+            ${s.changeInProgress ? badge('Change in progress', 'warning') : ''}
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            ${s.suffix === c.partNumber.suffix ? badge('Current', 'progress') : `<button class="link-btn" data-set-current="${i}">Set as current</button>`}
+            ${c.suffixHistory.length > 1 ? `<button class="icon-btn" data-suffix-rm="${i}">✕</button>` : ''}
+          </div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Derived from</label><select data-suffix="${i}.derivedFrom"><option value="">— root, no parent —</option>${selectOpts(otherSuffixes, s.derivedFrom || '')}</select></div>
+          <div class="field-inline"><label>Introduced</label><input type="date" data-suffix="${i}.dateIntroduced" value="${esc(s.dateIntroduced || '')}" /></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Compliance status</label><select data-suffix="${i}.complianceStatus">${selectOpts(['Approved compliant', 'Approved derivative of', 'Compliance underway'], s.complianceStatus)}</select></div>
+          ${s.complianceStatus === 'Approved derivative of'
+            ? `<div class="field-inline"><label>Approved derivative of</label><select data-suffix="${i}.approvedDerivativeOfSuffix"><option value="">—</option>${selectOpts(otherSuffixes, s.approvedDerivativeOfSuffix || '')}</select></div>`
+            : '<div></div>'}
+        </div>
+        <div class="field-inline" style="margin-top:8px;"><label>Note</label><input type="text" data-suffix="${i}.note" value="${esc(s.note || '')}" /></div>
+        <div class="modal-grid2" style="margin-top:8px;">
+          <div class="field-inline"><label>SCR / MOC reference</label><input type="text" data-suffix="${i}.scrRef" value="${esc(s.scrRef || '')}" placeholder="e.g. SCR-12345" /></div>
+          <div class="field-inline"><label>Testing required (for this suffix)</label><input type="text" data-suffix="${i}.testingRequired" value="${esc(s.testingRequired || '')}" /></div>
+        </div>
+        <label class="toggle-chip" style="margin-top:6px;"><input type="checkbox" data-suffix-check="${i}.changeInProgress" ${s.changeInProgress ? 'checked' : ''} /> Change in progress against this suffix (SCR raised)</label>
+      </div>`;
+    }).join('');
+
+    const linkedRows = c.overview.linkedParts.length ? c.overview.linkedParts.map((p, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(p.name) || 'Linked part'}</strong><button class="icon-btn" data-linked-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Part / module name</label><input type="text" data-linked="${i}.name" value="${esc(p.name)}" /></div>
+          <div class="field-inline"><label>Part number</label><input type="text" class="mono" data-linked="${i}.partNumber" value="${esc(p.partNumber)}" /></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Supplier</label><input type="text" data-linked="${i}.supplier" value="${esc(p.supplier)}" /></div>
+          <div class="field-inline"><label>Relationship</label><input type="text" data-linked="${i}.relationship" value="${esc(p.relationship)}" /></div>
+        </div>
+      </div>
+    `).join('') : '<div class="empty-state">No linked parts recorded — e.g. a headlamp housing an embedded HCM plugged into LEDs and light drivers from other suppliers.</div>';
+
+    return `
+      <div class="detail-header" style="margin-bottom:16px;">
+        <div><div class="kv-label">Product identity (prefix + base)</div><div class="kv-value mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}</div></div>
+        <div><div class="kv-label">Current suffix</div><div class="kv-value mono">${esc(c.partNumber.suffix)}</div></div>
+        <div><div class="kv-label">Compliance status</div><div class="kv-value">${badge(compliance.label, compliance.tone)}</div></div>
+        <div><div class="kv-label">Launched</div><div class="kv-value">${c.overview.launchDate ? fmtDate(new Date(c.overview.launchDate)) : '—'}</div></div>
+      </div>
+      <div class="field-inline" style="max-width:220px;"><label>Launch date</label><input type="date" id="ovLaunchDate" value="${esc(c.overview.launchDate)}" /></div>
+      <div class="kv-label" style="margin-top:10px;">Product history</div>
+      <textarea class="notes" id="ovHistoryNotes">${esc(c.overview.historyNotes || '')}</textarea>
+
+      <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Part number / suffix history</div><div class="card-sub">Prefix + base is this product's unique identity; suffixes below are revisions or market-specific derivatives off the same product</div></div><button class="theme-toggle" id="addSuffix">+ Add suffix revision</button></div>
+      ${suffixRows}
+
+      <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Linked parts</div><div class="card-sub">Other hardware linked to/inside this component</div></div><button class="theme-toggle" id="addLinked">+ Add linked part</button></div>
+      ${linkedRows}
+    `;
+  }
+  function wireOverviewInputs() {
+    const launchEl = document.getElementById('ovLaunchDate');
+    if (launchEl) launchEl.addEventListener('blur', () => { c.overview.launchDate = launchEl.value; render(); });
+    const historyEl = document.getElementById('ovHistoryNotes');
+    if (historyEl) historyEl.addEventListener('blur', () => { c.overview.historyNotes = historyEl.value; });
+    document.querySelectorAll('#ticketTabBody [data-suffix]').forEach(el => {
+      const [idx, key] = el.dataset.suffix.split('.');
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'blur', () => {
+        c.suffixHistory[Number(idx)][key] = el.value;
+        if (key === 'complianceStatus') render();
+      });
+    });
+    document.querySelectorAll('[data-suffix-check]').forEach(el => {
+      const [idx, key] = el.dataset.suffixCheck.split('.');
+      el.addEventListener('change', () => { c.suffixHistory[Number(idx)][key] = el.checked; render(); });
+    });
+    document.querySelectorAll('[data-set-current]').forEach(el => el.addEventListener('click', () => {
+      c.partNumber.suffix = c.suffixHistory[Number(el.dataset.setCurrent)].suffix;
+      render();
+    }));
+    document.querySelectorAll('[data-suffix-rm]').forEach(el => el.addEventListener('click', () => {
+      const idx = Number(el.dataset.suffixRm);
+      const removed = c.suffixHistory[idx];
+      c.suffixHistory.splice(idx, 1);
+      if (c.partNumber.suffix === removed.suffix) c.partNumber.suffix = c.suffixHistory[c.suffixHistory.length - 1].suffix;
+      render();
+    }));
+    const addSuffixBtn = document.getElementById('addSuffix');
+    if (addSuffixBtn) addSuffixBtn.addEventListener('click', () => {
+      // A new suffix revision normally arrives via an SCR against the currently-live suffix: flag that row as
+      // "changing" and append the incoming suffix's row for its required testing + compliance to be logged against.
+      const cur = currentSuffixRecord(c);
+      if (cur) cur.changeInProgress = true;
+      c.suffixHistory.push(makeSuffixRow({
+        suffix: nextSuffixCode(c.suffixHistory.map(s => s.suffix)), derivedFrom: cur ? cur.suffix : null, dateIntroduced: isoDate(TODAY),
+      }));
+      render();
+    });
+    document.querySelectorAll('[data-linked]').forEach(el => {
+      const [idx, key] = el.dataset.linked.split('.');
+      el.addEventListener('blur', () => { c.overview.linkedParts[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-linked-rm]').forEach(el => el.addEventListener('click', () => { c.overview.linkedParts.splice(Number(el.dataset.linkedRm), 1); render(); }));
+    const addLinkedBtn = document.getElementById('addLinked');
+    if (addLinkedBtn) addLinkedBtn.addEventListener('click', () => { c.overview.linkedParts.push({ name: '', partNumber: '', supplier: '', relationship: '' }); render(); });
+  }
+  function prereqTabHtml(c) {
+    const rows = c.prerequisites.map((p, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(p.label) || 'Spec'}</strong><button class="icon-btn" data-prereq-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Label</label><input type="text" data-prereq="${i}.label" value="${esc(p.label)}" /></div>
+          <div class="field-inline"><label>Value</label><input type="text" data-prereq="${i}.value" value="${esc(p.value)}" /></div>
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="ticket-notice">Pre-requisite information architecture reviews may need ahead of integration — current draw, quiescent current (QI), and anything else specific to this component.</div>
+      <div class="card-head"><div><div class="card-title">Pre-requisite specs</div><div class="card-sub">Add any spec relevant to architecture requirements</div></div><button class="theme-toggle" id="addPrereq">+ Add spec</button></div>
+      ${rows || '<div class="empty-state">No pre-requisite specs recorded.</div>'}
+    `;
+  }
+  function wirePrereqInputs() {
+    document.querySelectorAll('[data-prereq]').forEach(el => {
+      const [idx, key] = el.dataset.prereq.split('.');
+      el.addEventListener('blur', () => { c.prerequisites[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-prereq-rm]').forEach(el => el.addEventListener('click', () => { c.prerequisites.splice(Number(el.dataset.prereqRm), 1); render(); }));
+    const addBtn = document.getElementById('addPrereq');
+    if (addBtn) addBtn.addEventListener('click', () => { c.prerequisites.push({ label: '', value: '' }); render(); });
+  }
+  function changeLogTabHtml(c) {
+    const suffixOptions = c.suffixHistory.map(s => s.suffix);
+    const rows = c.changeLog.map((entry, i) => {
+      const approvalBoxes = APPROVAL_AREAS.map(([key, label]) => {
+        const a = entry.approvals[key];
+        return `<div class="field-inline" style="min-width:170px;">
+          <label>${esc(label)}</label>
+          <label class="toggle-chip ${a.approved ? 'on' : ''}"><input type="checkbox" data-changeapprove="${i}.${key}" ${a.approved ? 'checked' : ''}/> Approved</label>
+          ${a.approved ? `<input type="text" data-change-approver="${i}.${key}" placeholder="Approver name" value="${esc(a.approver || '')}" style="margin-top:4px;" /><div class="cell-sub">${a.date ? fmtDate(new Date(a.date)) : ''}</div>` : ''}
+        </div>`;
+      }).join('');
+      return `<div class="rr-row">
+        <div class="rr-row-head"><strong class="mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}-${esc(entry.partNumberSuffix || '?')}</strong><button class="icon-btn" data-change-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Suffix this change is against</label><select data-change="${i}.partNumberSuffix">${selectOpts(suffixOptions, entry.partNumberSuffix)}</select></div>
+          <div class="field-inline"><label>SCR / MOC reference</label><input type="text" data-change="${i}.scrRef" value="${esc(entry.scrRef)}" /></div>
+        </div>
+        <div class="field-inline" style="margin-top:8px;"><label>Descriptor of change</label><input type="text" data-change="${i}.descriptor" value="${esc(entry.descriptor)}" /></div>
+        <div class="modal-grid2" style="margin-top:8px; align-items:end;">
+          <label class="toggle-chip ${entry.semiCBomConfirmed ? 'on' : ''}"><input type="checkbox" data-change-check="${i}.semiCBomConfirmed" ${entry.semiCBomConfirmed ? 'checked' : ''}/> Semiconductor-content BOM confirmed</label>
+          <div class="field-inline"><label>Link (external BOM/tool)</label><input type="text" data-change="${i}.semiCBomLink" value="${esc(entry.semiCBomLink)}" placeholder="https://…" /></div>
+        </div>
+        <div class="kv-label" style="margin-top:12px;">Manager approvals — any variant that triggers a retest needs sign-off here</div>
+        <div class="approval-grid">${approvalBoxes}</div>
+      </div>`;
+    }).join('');
+    return `
+      <div class="ticket-notice">Track SCRs/MOCs against this component's hardware part numbers (including suffix), and log manager approval by area for any variant that triggers a retest.</div>
+      <div class="card-head"><div><div class="card-title">Change log</div><div class="card-sub">One entry per SCR/MOC</div></div><button class="theme-toggle" id="addChange">+ Add change entry</button></div>
+      ${rows || '<div class="empty-state">No changes logged yet.</div>'}
+    `;
+  }
+  function wireChangeLogInputs() {
+    document.querySelectorAll('[data-change]').forEach(el => {
+      const [idx, key] = el.dataset.change.split('.');
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'blur', () => { c.changeLog[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-change-check]').forEach(el => {
+      const [idx, key] = el.dataset.changeCheck.split('.');
+      el.addEventListener('change', () => { c.changeLog[Number(idx)][key] = el.checked; render(); });
+    });
+    document.querySelectorAll('[data-changeapprove]').forEach(el => {
+      const [idx, key] = el.dataset.changeapprove.split('.');
+      el.addEventListener('change', () => {
+        const a = c.changeLog[Number(idx)].approvals[key];
+        a.approved = el.checked;
+        if (el.checked) { if (!a.date) a.date = isoDate(TODAY); }
+        else { a.approver = ''; a.date = ''; }
+        render();
+      });
+    });
+    document.querySelectorAll('[data-change-approver]').forEach(el => {
+      const [idx, key] = el.dataset.changeApprover.split('.');
+      el.addEventListener('blur', () => { c.changeLog[Number(idx)].approvals[key].approver = el.value; });
+    });
+    document.querySelectorAll('[data-change-rm]').forEach(el => el.addEventListener('click', () => { c.changeLog.splice(Number(el.dataset.changeRm), 1); render(); }));
+    const addBtn = document.getElementById('addChange');
+    if (addBtn) addBtn.addEventListener('click', () => { c.changeLog.push(makeChangeEntry({ partNumberSuffix: c.partNumber.suffix })); render(); });
+  }
+  function hardwareTabHtml(c) {
+    const hc = c.hardwareCompliance;
+    const txRows = hc.transceivers.map((t, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(t.type) || 'Transceiver'}</strong><button class="icon-btn" data-tx-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Type</label><select data-tx="${i}.type">${selectOpts(['Transmitter', 'Receiver', 'Transceiver'], t.type)}</select></div>
+          <div class="field-inline"><label>Description</label><input type="text" data-tx="${i}.description" value="${esc(t.description)}" /></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Frequency</label><input type="text" data-tx="${i}.frequency" value="${esc(t.frequency)}" /></div>
+          <div class="field-inline"><label>Power</label><input type="text" data-tx="${i}.power" value="${esc(t.power)}" /></div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state">No transmitters or receivers recorded.</div>';
+
+    const marketPills = hc.marketList.map((m, i) => `<div class="pill-check active" data-market-rm="${i}">${esc(m)} ✕</div>`).join('') || '<span class="cell-sub">No markets recorded.</span>';
+
+    const blockedRows = hc.blockedMarkets.map((b, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(b.market) || 'Market'}</strong><button class="icon-btn" data-blocked-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Market</label><input type="text" data-blocked="${i}.market" value="${esc(b.market)}" /></div>
+          <div class="field-inline"><label>Reason</label><input type="text" data-blocked="${i}.reason" value="${esc(b.reason)}" /></div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state">No blocked markets recorded.</div>';
+
+    return `
+      <div class="ticket-notice">Radio/hardware compliance — transmitters and receivers fitted, replaceable battery, and market availability/restrictions.</div>
+      <label class="toggle-chip ${hc.replaceableBattery ? 'on' : ''}" style="margin-bottom:14px;"><input type="checkbox" id="hcBattery" ${hc.replaceableBattery ? 'checked' : ''}/> Replaceable battery fitted</label>
+
+      <div class="card-head"><div><div class="card-title">Transmitters &amp; receivers</div><div class="card-sub">Frequency and power of each</div></div><button class="theme-toggle" id="addTx">+ Add transmitter/receiver</button></div>
+      ${txRows}
+
+      <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Market list</div><div class="card-sub">Markets this part is sold/used in — click a pill to remove it</div></div></div>
+      <div class="pill-row" id="hcMarketPills">${marketPills}</div>
+      <div class="field-inline" style="max-width:280px; margin-top:8px;"><label>Add market</label><div style="display:flex; gap:6px;"><input type="text" id="hcMarketInput" placeholder="e.g. Brazil" /><button class="theme-toggle" id="addMarket">Add</button></div></div>
+
+      <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Blocked markets</div><div class="card-sub">Markets this part is blocked from, with a reason — sanctions, no approval, expired approval, etc.</div></div><button class="theme-toggle" id="addBlocked">+ Add blocked market</button></div>
+      ${blockedRows}
+    `;
+  }
+  function wireHardwareInputs() {
+    const battEl = document.getElementById('hcBattery');
+    if (battEl) battEl.addEventListener('change', () => { c.hardwareCompliance.replaceableBattery = battEl.checked; render(); });
+    document.querySelectorAll('[data-tx]').forEach(el => {
+      const [idx, key] = el.dataset.tx.split('.');
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'blur', () => { c.hardwareCompliance.transceivers[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-tx-rm]').forEach(el => el.addEventListener('click', () => { c.hardwareCompliance.transceivers.splice(Number(el.dataset.txRm), 1); render(); }));
+    const addTxBtn = document.getElementById('addTx');
+    if (addTxBtn) addTxBtn.addEventListener('click', () => { c.hardwareCompliance.transceivers.push({ type: 'Transmitter', description: '', frequency: '', power: '' }); render(); });
+
+    document.querySelectorAll('[data-market-rm]').forEach(el => el.addEventListener('click', () => { c.hardwareCompliance.marketList.splice(Number(el.dataset.marketRm), 1); render(); }));
+    const addMarketBtn = document.getElementById('addMarket');
+    if (addMarketBtn) addMarketBtn.addEventListener('click', () => {
+      const input = document.getElementById('hcMarketInput');
+      const v = input.value.trim();
+      if (v && !c.hardwareCompliance.marketList.includes(v)) c.hardwareCompliance.marketList.push(v);
+      render();
+    });
+
+    document.querySelectorAll('[data-blocked]').forEach(el => {
+      const [idx, key] = el.dataset.blocked.split('.');
+      el.addEventListener('blur', () => { c.hardwareCompliance.blockedMarkets[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('[data-blocked-rm]').forEach(el => el.addEventListener('click', () => { c.hardwareCompliance.blockedMarkets.splice(Number(el.dataset.blockedRm), 1); render(); }));
+    const addBlockedBtn = document.getElementById('addBlocked');
+    if (addBlockedBtn) addBlockedBtn.addEventListener('click', () => { c.hardwareCompliance.blockedMarkets.push({ market: '', reason: '' }); render(); });
   }
   function gradeTabHtml(rec) {
     return `
@@ -1655,6 +2331,7 @@ function initApp() {
     else if (btn.dataset.view === 'programme') renderProgramme();
     else if (btn.dataset.view === 'vehicles') refreshVehicleDetail();
     else if (btn.dataset.view === 'components') renderComponentTable();
+    else if (btn.dataset.view === 'vehiclecompliance') refreshComplianceDetail();
   });
   document.getElementById('themeToggle').addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
@@ -1672,7 +2349,7 @@ function initApp() {
     document.getElementById(id).addEventListener('input', renderVehicleList);
     document.getElementById(id).addEventListener('change', renderVehicleList);
   });
-  ['compSearch', 'filterVline', 'filterGrade', 'filterEmc', 'filterFusa', 'filterCyber'].forEach(id => {
+  ['compSearch', 'filterProgramme', 'filterVline', 'filterGrade', 'filterEmc', 'filterFusa', 'filterCyber'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderComponentTable);
     document.getElementById(id).addEventListener('change', renderComponentTable);
   });
@@ -1683,9 +2360,10 @@ function initApp() {
   renderVehicleDetail();
   populateComponentFilters();
   renderComponentTable();
+  refreshComplianceDetail();
 
   const initialView = (location.hash || '#dashboard').replace('#', '');
-  if (['dashboard', 'programme', 'vehicles', 'components', 'roadmap'].includes(initialView)) setActiveView(initialView);
+  if (['dashboard', 'programme', 'vehicles', 'components', 'vehiclecompliance', 'roadmap'].includes(initialView)) setActiveView(initialView);
 }
 
 /* ============================================================
