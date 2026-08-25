@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EE Assurance Tracker — GRADE &amp; EMC POC</title>
+<title>ECAS — Electrical / Electronic Compliance Approval System</title>
 <style>
   /* ============================================================
      TOKENS — reference palette (see dataviz skill: references/palette.md)
@@ -144,7 +144,34 @@
   .card-title { font-size: 14.5px; font-weight: 650; }
   .card-sub { font-size: 12px; color: var(--text-muted); }
   .two-col { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; align-items: start; }
-  @media (max-width: 980px) { .two-col { grid-template-columns: 1fr; } .stat-row{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width: 980px) { .two-col { grid-template-columns: 1fr; } .stat-row{grid-template-columns:repeat(2,1fr) !important;} }
+
+  /* ---------------- ECAS dashboard ---------------- */
+  .ecas-hero {
+    display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+    background: linear-gradient(135deg, var(--surface-1), var(--page-plane));
+    border: 1px solid var(--border); border-radius: 14px; padding: 26px 30px; margin-bottom: 18px;
+  }
+  .ecas-hero-text { flex: 1 1 320px; min-width: 260px; }
+  .ecas-logo { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: var(--series-1); }
+  .ecas-tagline { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+  .ecas-hero-desc { font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; max-width: 500px; line-height: 1.55; }
+  .ecas-hero-art { flex: none; width: 190px; max-width: 38vw; }
+  .ecas-hero-art svg { width: 100%; height: auto; display: block; }
+  .ecas-mode-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ecas-mode-btn {
+    font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 20px;
+    padding: 8px 14px; cursor: pointer;
+  }
+  .ecas-mode-btn:hover { color: var(--text-primary); }
+  .ecas-mode-btn.on { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+  .ecas-selectors { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .ecas-selectors select {
+    font-family: var(--font); font-size: 12.5px; border: 1px solid var(--border-strong);
+    background: var(--surface-2); color: var(--text-primary); border-radius: 7px; padding: 8px 10px;
+  }
+  .ecas-hint { font-size: 12.5px; color: var(--text-muted); padding: 4px 2px; }
 
   /* ---------------- Stacked status bars ---------------- */
   .stack-row { display: grid; grid-template-columns: 190px 1fr 56px; align-items: center; gap: 12px; padding: 7px 0; }
@@ -315,6 +342,7 @@
   .rr-row-head, .dev-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   .approval-grid { display: flex; flex-wrap: wrap; gap: 14px; }
   .approval-grid input[type="text"] { width: 100%; font-size: 12px; padding: 5px 8px; }
+  .subtile { border: 1px solid var(--gridline); border-radius: 8px; padding: 14px 16px; margin-top: 18px; background: var(--page-plane); }
 </style>
 </head>
 <body class="viz-root">
@@ -326,8 +354,8 @@
 
   <header class="topbar">
     <div class="brand">
-      <div class="brand-title">EE Assurance Tracker</div>
-      <div class="brand-sub">GRADE &amp; EMC sign-off — component &amp; vehicle programme view</div>
+      <div class="brand-title">ECAS</div>
+      <div class="brand-sub">Electrical / Electronic Compliance Approval System</div>
     </div>
     <nav class="nav" id="nav">
       <button data-view="dashboard" class="active">Dashboard</button>
@@ -347,53 +375,55 @@
 
     <!-- ============ DASHBOARD ============ -->
     <section id="view-dashboard" class="view">
-      <h1 class="page-title">Fleet compliance overview</h1>
-      <p class="page-sub">GRADE and EMC sign-off status across all tracked vehicle lines and components. Illustrative data — for workflow &amp; layout review only.</p>
-
-      <div class="vfilter-row">
-        <label class="toggle-chip" id="hideSignedOffDashChip"><input type="checkbox" id="hideSignedOffDash" /> Hide signed-off vehicle lines</label>
-      </div>
-
-      <div class="stat-row" id="statRow"></div>
-
-      <div class="card">
-        <div class="card-head">
-          <div><div class="card-title">Overall vehicle status</div><div class="card-sub">Next gateway and open-issue summary per vehicle line, most urgent first</div></div>
+      <div class="ecas-hero">
+        <div class="ecas-hero-text">
+          <div class="ecas-logo">ECAS</div>
+          <div class="ecas-tagline">Electrical / Electronic Compliance Approval System</div>
+          <p class="ecas-hero-desc">Pick how you want to look at the data below — an engineer can pull up their own workload, a vehicle line manager can check a specific car, and everyone can see what's still outstanding across live work. Illustrative data — for workflow &amp; layout review only.</p>
         </div>
-        <div id="overallStatusWrap"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div><div class="card-title">Vehicle compliance</div><div class="card-sub">EMC to ECE Reg 10, corporate EMC, and cyber sign-off to Reg 155 — click a row for the full workflow</div></div>
-        </div>
-        <div id="dashVcWrap"></div>
-      </div>
-
-      <div class="two-col">
-        <div class="card">
-          <div class="card-head">
-            <div><div class="card-title">GRADE status by vehicle line</div><div class="card-sub">Paper-based design review, 5-stage process</div></div>
-          </div>
-          <div id="gradeStack"></div>
-          <div class="legend" id="gradeLegend"></div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <div><div class="card-title">EMC status by vehicle line</div><div class="card-sub">Test plan approval → test result outcome</div></div>
-          </div>
-          <div id="emcStack"></div>
-          <div class="legend" id="emcLegend"></div>
+        <div class="ecas-hero-art" aria-hidden="true">
+          <svg viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="var(--series-1)" stroke-width="1.5" fill="none" opacity="0.55">
+              <path d="M10 20 H50 V8 H90"/>
+              <path d="M15 95 H40 V102 H80"/>
+              <path d="M170 15 H200 V30"/>
+              <path d="M190 88 H210 V72"/>
+              <path d="M25 60 H5"/>
+              <path d="M205 55 H218"/>
+            </g>
+            <g fill="var(--series-1)" opacity="0.85">
+              <circle cx="10" cy="20" r="2.4"/><circle cx="90" cy="8" r="2.4"/>
+              <circle cx="15" cy="95" r="2.4"/><circle cx="80" cy="102" r="2.4"/>
+              <circle cx="200" cy="15" r="2.4"/><circle cx="200" cy="30" r="2.4"/>
+              <circle cx="210" cy="72" r="2.4"/><circle cx="5" cy="60" r="2.4"/>
+              <circle cx="218" cy="55" r="2.4"/>
+            </g>
+            <path d="M28 78 C28 62 40 60 52 52 C64 44 78 34 100 34 L150 34 C166 34 176 44 184 54 C196 56 204 60 204 70 C204 76 200 78 194 78 L182 78 C182 68 174 60 164 60 C154 60 146 68 146 78 L88 78 C88 68 80 60 70 60 C60 60 52 68 52 78 L36 78 C31 78 28 78 28 78 Z"
+                  fill="var(--surface-2)" stroke="var(--text-primary)" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M64 52 C70 42 82 36 100 36 L140 36 C154 36 162 42 170 52 Z" fill="var(--series-1)" opacity="0.18"/>
+            <circle cx="70" cy="78" r="15" fill="var(--text-primary)"/>
+            <circle cx="70" cy="78" r="6.5" fill="var(--surface-2)"/>
+            <circle cx="164" cy="78" r="15" fill="var(--text-primary)"/>
+            <circle cx="164" cy="78" r="6.5" fill="var(--surface-2)"/>
+          </svg>
         </div>
       </div>
 
       <div class="card">
         <div class="card-head">
-          <div><div class="card-title">Needs attention</div><div class="card-sub">Non-compliant EMC results, or GRADE reviews with open issues</div></div>
-          <select id="attentionSort"><option value="due">Sort by due date</option><option value="reason">Sort by reason</option></select>
+          <div><div class="card-title">Find a summary</div><div class="card-sub">Choose how to slice the data — the summary below updates to match</div></div>
         </div>
-        <div id="attentionTable"></div>
+        <div class="ecas-mode-row" id="ecasModeRow">
+          <button class="ecas-mode-btn" data-mode="engineer">By engineer</button>
+          <button class="ecas-mode-btn" data-mode="vehicle">By vehicle line</button>
+          <button class="ecas-mode-btn" data-mode="livecomp">Live components</button>
+          <button class="ecas-mode-btn" data-mode="livevehicle">Live vehicles</button>
+          <button class="ecas-mode-btn" data-mode="topic">By topic</button>
+        </div>
+        <div class="ecas-selectors" id="ecasSelectors"></div>
       </div>
+
+      <div id="ecasSummary"></div>
     </section>
 
     <!-- ============ PROGRAMME ============ -->
@@ -582,6 +612,14 @@ const EMC_TONE = {
   'Not started': 'neutral', 'Plan under review': 'progress', 'Awaiting test results': 'progress',
   'Compliant': 'good', 'Class 2 Acceptance': 'warning', 'Deviation Approved': 'warning', 'Non-Compliant': 'critical',
 };
+// Drives the ECAS dashboard's "By topic" view — one entry per review area, pointing at that area's
+// existing stage list / colour map / tone map so the topic view can stay generic.
+const TOPIC_META = {
+  grade: { label: 'GRADE', stages: GRADE_STAGES, color: GRADE_COLOR, tone: GRADE_TONE },
+  emc: { label: 'EMC', stages: EMC_OVERALL_ORDER, color: EMC_COLOR, tone: EMC_TONE },
+  fusa: { label: 'Functional Safety', stages: FUSA_STAGES, color: FUSA_COLOR, tone: FUSA_TONE },
+  cyber: { label: 'Cyber Security', stages: CYBER_STAGES, color: CYBER_COLOR, tone: CYBER_TONE },
+};
 const EMC_SUBTESTS = [
   ['RE310', 'Radiated RF Emissions'], ['CE420', 'Conducted RF Emissions'],
   ['CI410', 'Conducted Transient Emissions'], ['RI113', 'RF Immunity — Low Band'],
@@ -594,6 +632,45 @@ const EMC_SUBTESTS = [
   ['CI290', 'Immunity from Continuous Power Line Disturbance'],
 ];
 const RISK_CATEGORIES = ['No Concern', 'Minor Concern', 'Major Concern'];
+// GRADE checklist — mirrors the EMC sub-test list structurally: a set of items each with its own
+// approval result, shown in its own tile below the main GRADE fields.
+const GRADE_CHECKLIST = [
+  ['CL-LTE', 'Low Temperature Exposure'], ['CL-HTE', 'High Temperature Exposure'],
+  ['CL-LTO', 'Low Temperature Operation'], ['CL-HTO', 'High Temperature Operation'],
+  ['CL-TST', 'Temperature Step Test'], ['CL-PTC', 'Powered Thermal Cycle'],
+  ['CL-TSA', 'Thermal Shock in Air'], ['PE/FE', 'Performance Evaluation (L1) + Functional Evaluation (L4)'],
+  ['ME-V', 'Powered Vibration'], ['ME-S', 'Mechanical Shock/Drop (14 samples required)'],
+  ['AN', 'Audible Noise'], ['CL-THC', 'Temperature Humidity Cycle'],
+  ['IN-TSI', 'Ice Water Immersion'], ['IN-TSS', 'Ice Water Splash'],
+  ['IN-W', 'Water/Fluid Ingress'], ['IN-D', 'Dust Ingress'],
+  ['CL-SALT', 'Salt Mist Atmosphere'], ['CR', 'Chemical Resistance (may require extra samples)'],
+  ['ME-C', 'Connector Lead/Lock Strength'], ['L-CD', 'Controls Durability'],
+  ['L-MW', 'Mechanical Wear-out'], ['CL-CG', 'Corrosive Gases (6 samples)'],
+  ['L-TSE', 'Thermal Shock Endurance (8 samples)'], ['CL-DEW', 'Dewing Test (6 samples)'],
+  ['L-HTE', 'High Temperature Endurance (6 samples)'],
+  ['L-THB', '85/85 High Temperature - High Humidity Endurance (6 samples)'],
+];
+const GRADE_CHECK_RESULTS = ['Approved', 'Not Approved', 'In Review', 'Not Applicable'];
+function gradeCheckResultFor(gradeStage) {
+  if (gradeStage === 'Complete') return pickWeighted([['Approved', 8], ['Not Applicable', 2], ['Not Approved', 1]]);
+  if (gradeStage === 'Not started') return 'In Review';
+  return pickWeighted([['In Review', 5], ['Approved', 3], ['Not Approved', 1], ['Not Applicable', 1]]);
+}
+const EMC_COMMENTS_POOL = [
+  'Test house booked, chamber slot confirmed for next available window.',
+  'Pre-compliance scan complete; formal test plan pending sign-off.',
+  'Awaiting updated test plan following late design change.',
+  'No comments — nominal progress against plan.',
+];
+// Traceability: which field on each area's record represents "approved", and the label used when a
+// first approval is logged automatically into the component's What's Changed log.
+const APPROVED_TRIGGER = {
+  grade: sub => sub.status === 'Complete',
+  emc: sub => ['Compliant', 'Class 2 Acceptance', 'Deviation Approved'].includes(sub.resultStatus),
+  fusa: sub => sub.status === 'Complete',
+  cyber: sub => sub.status === 'Complete',
+};
+const AREA_LABELS = { grade: 'GRADE', emc: 'EMC', fusa: 'FUSA', cyber: 'Cyber' };
 
 /* ============================================================
    PROGRAMME — brand → vehicle line → model year (feeds VEHICLE_LINES)
@@ -881,10 +958,19 @@ function subTestResultFor(resultStatus) {
 function makeBlankRecord(componentId, vehicleLineId) {
   return {
     componentId, vehicleLineId,
-    grade: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: 'STJLR.18.009_Iss11', openIssues: 0, closedIssues: 0, firstReviewDate: null, meetingNotes: '', workbookLocation: '' },
-    emc: { standard: EMC_STANDARD, planStatus: 'No Approved EMC test plan', resultStatus: 'No test results', riskCategory: 'No Concern', documentsAudited: EMC_STANDARD, reviewer: '', subTests: EMC_SUBTESTS.map(([code, name]) => ({ code, name, result: 'No Test Required' })), testReportLocation: '—' },
-    fusa: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: '', reviewer: '', notes: '' },
-    cyber: { status: 'Not started', riskCategory: 'No Concern', documentsAudited: '', reviewer: '', notes: '' },
+    grade: {
+      status: 'Not started', engineer: '', riskCategory: 'No Concern', documentsAudited: 'STJLR.18.009_Iss11',
+      hwLevel: '', swLevel: '', firstApprovalDate: null,
+      openIssues: 0, closedIssues: 0, firstReviewDate: null, meetingNotes: '', workbookLocation: '',
+      checklist: GRADE_CHECKLIST.map(([code, name]) => ({ code, name, result: 'In Review' })),
+    },
+    emc: {
+      standard: EMC_STANDARD, planStatus: 'No Approved EMC test plan', resultStatus: 'No test results', engineer: '', riskCategory: 'No Concern', documentsAudited: EMC_STANDARD,
+      hwLevel: '', swLevel: '', firstApprovalDate: null, comments: '', testPlanDocs: [],
+      subTests: EMC_SUBTESTS.map(([code, name]) => ({ code, name, result: 'No Test Required' })), testReportLocation: '—',
+    },
+    fusa: { status: 'Not started', engineer: '', riskCategory: 'No Concern', documentsAudited: '', hwLevel: '', swLevel: '', firstApprovalDate: null, notes: '' },
+    cyber: { status: 'Not started', engineer: '', riskCategory: 'No Concern', documentsAudited: '', hwLevel: '', swLevel: '', firstApprovalDate: null, notes: '' },
   };
 }
 
@@ -896,28 +982,43 @@ COMPONENTS.forEach(c => {
     const openIssues = gradeStage === 'Complete' ? randInt(0, 1) : (gradeStage === 'Not started' ? 0 : randInt(0, 5));
     const [planStatus, resultStatus] = emcStagesForPhase(vl.phase);
     const subTests = EMC_SUBTESTS.map(([code, name]) => ({ code, name, result: subTestResultFor(resultStatus) }));
+    const hwSwLevel = () => ({ hwLevel: 'Rev ' + pick(['A', 'B', 'C', 'D']), swLevel: `v${randInt(1, 4)}.${randInt(0, 9)}.${randInt(0, 9)}` });
+
+    const gradeObj = Object.assign({
+      status: gradeStage, engineer: pick(ENGINEERS), riskCategory: pick(RISK_CATEGORIES), documentsAudited: 'STJLR.18.009_Iss11',
+      firstApprovalDate: null,
+      openIssues, closedIssues: randInt(0, 20),
+      firstReviewDate: fmtDate(addDays(vl.designFreezeDate, -randInt(30, 200))),
+      meetingNotes: pick([
+        'Design review held with supplier; component owner confirmed no location change vs prior model year. Awaiting updated BOM evidence.',
+        'Production review walkthrough complete. Minor labelling discrepancy raised as an action, due next meeting.',
+        'Workbook populated for design topics 1–14. Layout and clearance checks outstanding.',
+        'Component owner validated no risk change from prior programme reuse. Closed out as no further action.',
+        'Supplier presented test evidence; two open items on connector sealing, tracked to close before Design Freeze.',
+      ]),
+      workbookLocation: `\\\\jlrshare\\EE\\GRADE\\${c.name.replace(/\s+/g, '_')}\\${vl.programme}_Workbook_v${randInt(1,5)}.xlsx`,
+      checklist: GRADE_CHECKLIST.map(([code, name]) => ({ code, name, result: gradeCheckResultFor(gradeStage) })),
+    }, hwSwLevel());
+    if (APPROVED_TRIGGER.grade(gradeObj)) gradeObj.firstApprovalDate = isoDate(addDays(vl.designFreezeDate, -randInt(5, 60)));
+
+    const emcObj = Object.assign({
+      standard: EMC_STANDARD, planStatus, resultStatus, engineer: pick(ENGINEERS), riskCategory: pick(RISK_CATEGORIES), documentsAudited: EMC_STANDARD,
+      firstApprovalDate: null, comments: pick(EMC_COMMENTS_POOL),
+      testPlanDocs: rand() < 0.4 ? [{ name: 'EMC Test Plan v1', location: `https://jlrglobal.sharepoint.com/sites/EEGRADE/Shared%20Documents/EMC/${c.id}_${vl.programme}_TestPlan.pdf` }] : [],
+      subTests,
+      testReportLocation: resultStatus === 'No test results' ? '—' : `https://jlrglobal.sharepoint.com/sites/EEGRADE/Shared%20Documents/EMC/${c.id}_${vl.programme}_TestReport.pdf`,
+    }, hwSwLevel());
+    if (APPROVED_TRIGGER.emc(emcObj)) emcObj.firstApprovalDate = isoDate(addDays(TODAY, -randInt(5, 300)));
+
+    const fusaObj = Object.assign({ status: gradeStageForPhase(vl.phase), engineer: pick(ENGINEERS), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', firstApprovalDate: null, notes: pick(FUSA_NOTES_POOL) }, hwSwLevel());
+    if (APPROVED_TRIGGER.fusa(fusaObj)) fusaObj.firstApprovalDate = isoDate(addDays(TODAY, -randInt(5, 300)));
+
+    const cyberObj = Object.assign({ status: gradeStageForPhase(vl.phase), engineer: pick(ENGINEERS), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', firstApprovalDate: null, notes: pick(CYBER_NOTES_POOL) }, hwSwLevel());
+    if (APPROVED_TRIGGER.cyber(cyberObj)) cyberObj.firstApprovalDate = isoDate(addDays(TODAY, -randInt(5, 300)));
+
     RECORDS.push({
       componentId: c.id, vehicleLineId: vlId,
-      grade: {
-        status: gradeStage, riskCategory: pick(RISK_CATEGORIES), documentsAudited: 'STJLR.18.009_Iss11',
-        openIssues, closedIssues: randInt(0, 20),
-        firstReviewDate: fmtDate(addDays(vl.designFreezeDate, -randInt(30, 200))),
-        meetingNotes: pick([
-          'Design review held with supplier; component owner confirmed no location change vs prior model year. Awaiting updated BOM evidence.',
-          'Production review walkthrough complete. Minor labelling discrepancy raised as an action, due next meeting.',
-          'Workbook populated for design topics 1–14. Layout and clearance checks outstanding.',
-          'Component owner validated no risk change from prior programme reuse. Closed out as no further action.',
-          'Supplier presented test evidence; two open items on connector sealing, tracked to close before Design Freeze.',
-        ]),
-        workbookLocation: `\\\\jlrshare\\EE\\GRADE\\${c.name.replace(/\s+/g, '_')}\\${vl.programme}_Workbook_v${randInt(1,5)}.xlsx`,
-      },
-      emc: {
-        standard: EMC_STANDARD, planStatus, resultStatus, riskCategory: pick(RISK_CATEGORIES), documentsAudited: EMC_STANDARD, subTests,
-        reviewer: pick(ENGINEERS),
-        testReportLocation: resultStatus === 'No test results' ? '—' : `https://jlrglobal.sharepoint.com/sites/EEGRADE/Shared%20Documents/EMC/${c.id}_${vl.programme}_TestReport.pdf`,
-      },
-      fusa: { status: gradeStageForPhase(vl.phase), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', reviewer: pick(ENGINEERS), notes: pick(FUSA_NOTES_POOL) },
-      cyber: { status: gradeStageForPhase(vl.phase), riskCategory: pick(RISK_CATEGORIES), documentsAudited: '', reviewer: pick(ENGINEERS), notes: pick(CYBER_NOTES_POOL) },
+      grade: gradeObj, emc: emcObj, fusa: fusaObj, cyber: cyberObj,
     });
   });
 });
@@ -1004,141 +1105,325 @@ function overallComplianceInfo(c) {
 /* ============================================================
    DASHBOARD
    ============================================================ */
+// ---- ECAS landing-page selector state ----
+let dashMode = 'engineer';
+let dashEngineer = ENGINEERS[0];
+let dashVlineDef = '';
+let dashVlineMy = '';
+let dashTopic = 'grade';
+
+// Records for a component<->vehicleLine pairing that's still actually current (component not since
+// unassigned from that line) — the same guard recordsForComponent uses, generalised across all records.
+function allValidRecords() {
+  return RECORDS.filter(r => { const c = COMPONENTS.find(x => x.id === r.componentId); return c && c.vehicleLineIds.includes(r.vehicleLineId); });
+}
+function isOutstanding(area, sub) { return !APPROVED_TRIGGER[area](sub); }
+function liveVehicleLines() { return VEHICLE_LINES.filter(v => v.phase !== 'signed-off'); }
+function vehicleLineDefOptions() {
+  const map = new Map();
+  VEHICLE_LINES.forEach(vl => { if (!map.has(vl.vehicleLineDefId)) map.set(vl.vehicleLineDefId, vl.nameplate); });
+  return [...map.entries()];
+}
+function topicStatusFor(topic, rec) { return topic === 'emc' ? emcOverallStatus(rec.emc) : rec[topic].status; }
+
 function renderDashboard() {
-  const hideSigned = document.getElementById('hideSignedOffDash').checked;
-  document.getElementById('hideSignedOffDashChip').classList.toggle('on', hideSigned);
-  const activeLines = hideSigned ? VEHICLE_LINES.filter(v => v.phase !== 'signed-off') : VEHICLE_LINES;
-  const activeIds = new Set(activeLines.map(v => v.id));
-  const activeRecords = RECORDS.filter(r => activeIds.has(r.vehicleLineId));
-
-  // Components actually fitted to a live (active) vehicle line only — unassigned components excluded.
-  const liveComponents = COMPONENTS.filter(c => c.vehicleLineIds.some(id => activeIds.has(id)));
-  // Count product identity as prefix + base only — suffix revisions of the same product are not counted separately.
-  const liveProductIdentities = new Set(liveComponents.map(c => `${c.partNumber.prefix}-${c.partNumber.base}`));
-
-  // Change requests: R&R plans (always in-flight in this model) + deviations not yet permanently closed out.
-  const liveChangeRequests = liveComponents.reduce((sum, c) => {
-    const openRR = c.rrPlans.filter(p => p.status !== 'Closed').length;
-    const openDev = c.deviations.filter(d => d.status !== 'Approved - Permanent' && d.status !== 'Closed').length;
-    return sum + openRR + openDev;
-  }, 0);
-
-  // Vehicle sign-offs live right now: lines in late programme, sign-off gate imminent and not yet passed.
-  const liveVehicleSignOffs = activeLines.filter(v => v.phase === 'late').length;
-
-  const totalRecords = activeRecords.length;
-  const attention = activeRecords.filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3);
-
-  document.getElementById('statRow').innerHTML = `
-    ${statTile('Live car lines', activeLines.length.toLocaleString(), 'vehicle lines currently being worked')}
-    ${statTile('Live components', liveProductIdentities.size.toLocaleString(), 'unique prefix + base, fitted to a live car line')}
-    ${statTile('Live change requests', liveChangeRequests.toLocaleString(), 'open R&amp;R plans + unresolved deviations')}
-    ${statTile('Live vehicle sign-offs', liveVehicleSignOffs.toLocaleString(), 'late programme, gate not yet passed')}
-    ${statTile('Needs attention', attention.length.toLocaleString(), 'non-compliant or high open-issue count', attention.length ? 'critical' : 'good')}
-  `;
-
-  document.getElementById('overallStatusWrap').innerHTML = renderOverallStatusTile(activeLines);
-  document.querySelectorAll('#overallStatusWrap tbody tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedVlineId = tr.dataset.vline; setActiveView('vehicles'); refreshVehicleDetail();
-  }));
-
-  document.getElementById('dashVcWrap').innerHTML = renderDashboardVehicleComplianceTile(activeLines);
-  document.querySelectorAll('#dashVcWrap tbody tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedVlineId = tr.dataset.vline; setActiveView('vehiclecompliance'); refreshComplianceDetail();
-  }));
-
-  const gradeAll = {}; GRADE_STAGES.forEach(s => gradeAll[s] = 0);
-  const gradeRows = activeLines.map(vl => {
-    const recs = recordsForVehicleLine(vl.id);
-    const counts = {}; GRADE_STAGES.forEach(s => counts[s] = 0);
-    recs.forEach(r => { counts[r.grade.status]++; gradeAll[r.grade.status]++; });
-    return `<div class="stack-row">
-      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${esc(vl.programme)}</div></div>
-      <div class="stack-bar">${stackedStatusBar(counts, GRADE_STAGES, GRADE_COLOR, recs.length || 1)}</div>
-      <div class="stack-total">${recs.length}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('gradeStack').innerHTML = gradeRows || '<div class="empty-state">No vehicle lines to show.</div>';
-  document.getElementById('gradeLegend').innerHTML = legendFor(GRADE_STAGES, GRADE_COLOR, gradeAll);
-
-  const emcAll = {}; EMC_OVERALL_ORDER.forEach(s => emcAll[s] = 0);
-  const emcRows = activeLines.map(vl => {
-    const recs = recordsForVehicleLine(vl.id);
-    const counts = {}; EMC_OVERALL_ORDER.forEach(s => counts[s] = 0);
-    recs.forEach(r => { const st = emcOverallStatus(r.emc); counts[st]++; emcAll[st]++; });
-    return `<div class="stack-row">
-      <div><div class="stack-line-label">${esc(vl.nameplate)} ${vl.my}</div><div class="stack-line-sub">${esc(vl.programme)}</div></div>
-      <div class="stack-bar">${stackedStatusBar(counts, EMC_OVERALL_ORDER, EMC_COLOR, recs.length || 1)}</div>
-      <div class="stack-total">${recs.length}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('emcStack').innerHTML = emcRows || '<div class="empty-state">No vehicle lines to show.</div>';
-  document.getElementById('emcLegend').innerHTML = legendFor(EMC_OVERALL_ORDER, EMC_COLOR, emcAll);
-
-  renderAttentionTable(activeRecords);
+  document.querySelectorAll('#ecasModeRow .ecas-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === dashMode));
+  renderEcasSelectors();
+  renderEcasSummary();
 }
 
-function renderDashboardVehicleComplianceTile(lines) {
-  if (!lines.length) return '<div class="empty-state">No vehicle lines to show.</div>';
-  const sorted = [...lines].sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
-  const rows = sorted.map(vl => {
-    const vc = getVehicleCompliance(vl.id);
-    return `<tr data-vline="${vl.id}">
-      <td>${esc(vl.nameplate)} ${vl.my}<div class="cell-sub">${esc(vl.programme)}</div></td>
-      <td>${badge(vc.emcR10.status, VC_TONE[vc.emcR10.status])}<div class="cell-sub">${esc(vc.emcR10.regRevision)}</div></td>
-      <td>${badge(vc.corporateEmc.status, VC_TONE[vc.corporateEmc.status])}</td>
-      <td>${badge(vc.cyberR155.status, VC_TONE[vc.cyberR155.status])}</td>
-      <td>${vc.approved ? badge('Signed off', 'good') : badge('Pending', 'neutral')}</td>
+function renderEcasSelectors() {
+  const wrap = document.getElementById('ecasSelectors');
+  if (dashMode === 'engineer') {
+    wrap.innerHTML = `<select id="ecasEngineerSel">${selectOpts(ENGINEERS, dashEngineer)}</select>`;
+    document.getElementById('ecasEngineerSel').addEventListener('change', e => { dashEngineer = e.target.value; renderEcasSummary(); });
+  } else if (dashMode === 'vehicle') {
+    const defs = vehicleLineDefOptions();
+    if (!defs.length) { wrap.innerHTML = '<div class="ecas-hint">No vehicle lines defined yet — add one in the Programme tab.</div>'; return; }
+    if (!defs.some(([id]) => id === dashVlineDef)) dashVlineDef = defs[0][0];
+    const myOptions = VEHICLE_LINES.filter(v => v.vehicleLineDefId === dashVlineDef);
+    if (!myOptions.some(v => v.id === dashVlineMy)) dashVlineMy = myOptions.length ? myOptions[0].id : '';
+    wrap.innerHTML = `
+      <select id="ecasVlineDefSel">${defs.map(([id, name]) => `<option value="${esc(id)}" ${id === dashVlineDef ? 'selected' : ''}>${esc(name)}</option>`).join('')}</select>
+      <select id="ecasVlineMySel">${myOptions.map(v => `<option value="${esc(v.id)}" ${v.id === dashVlineMy ? 'selected' : ''}>${esc(v.my)}</option>`).join('')}</select>
+    `;
+    document.getElementById('ecasVlineDefSel').addEventListener('change', e => { dashVlineDef = e.target.value; dashVlineMy = ''; renderEcasSelectors(); renderEcasSummary(); });
+    document.getElementById('ecasVlineMySel').addEventListener('change', e => { dashVlineMy = e.target.value; renderEcasSummary(); });
+  } else if (dashMode === 'topic') {
+    const opts = Object.entries(TOPIC_META).map(([k, m]) => `<option value="${k}" ${k === dashTopic ? 'selected' : ''}>${esc(m.label)}</option>`).join('');
+    wrap.innerHTML = `<select id="ecasTopicSel">${opts}</select>`;
+    document.getElementById('ecasTopicSel').addEventListener('change', e => { dashTopic = e.target.value; renderEcasSummary(); });
+  } else {
+    wrap.innerHTML = `<div class="ecas-hint">Showing all live (not yet signed-off) ${dashMode === 'livecomp' ? 'components' : 'vehicle lines'} — no further selection needed.</div>`;
+  }
+}
+
+function renderEcasSummary() {
+  const wrap = document.getElementById('ecasSummary');
+  if (dashMode === 'engineer') wrap.innerHTML = ecasEngineerHtml(dashEngineer);
+  else if (dashMode === 'vehicle') wrap.innerHTML = ecasVehicleHtml(dashVlineMy);
+  else if (dashMode === 'livecomp') wrap.innerHTML = ecasLiveComponentsHtml();
+  else if (dashMode === 'livevehicle') wrap.innerHTML = ecasLiveVehiclesHtml();
+  else wrap.innerHTML = ecasTopicHtml(dashTopic);
+  wireEcasSummary();
+}
+function wireEcasSummary() {
+  document.querySelectorAll('#ecasSummary [data-open-comp]').forEach(el => el.addEventListener('click', () => openComponentTicket(el.dataset.openComp, el.dataset.openVline || undefined)));
+  document.querySelectorAll('#ecasSummary [data-open-vehicle]').forEach(el => el.addEventListener('click', () => { selectedVlineId = el.dataset.openVehicle; setActiveView('vehicles'); refreshVehicleDetail(); }));
+  document.querySelectorAll('#ecasSummary [data-open-compliance]').forEach(el => el.addEventListener('click', () => { selectedVlineId = el.dataset.openCompliance; setActiveView('vehiclecompliance'); refreshComplianceDetail(); }));
+}
+
+// ---- By engineer ----
+function ecasEngineerHtml(eng) {
+  const owned = COMPONENTS.filter(c => c.engineer === eng);
+  const recs = allValidRecords();
+  const areaRows = [];
+  ['grade', 'emc', 'fusa', 'cyber'].forEach(area => { recs.forEach(r => { if (r[area].engineer === eng) areaRows.push({ r, area }); }); });
+  const outstandingCount = areaRows.filter(({ r, area }) => isOutstanding(area, r[area])).length;
+
+  const statHtml = `<div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+    ${statTile('Components owned', owned.length, 'as component owner')}
+    ${statTile('Reviews assigned', areaRows.length, 'across GRADE / EMC / FUSA / Cyber')}
+    ${statTile('Still outstanding', outstandingCount, 'not yet approved', outstandingCount ? 'critical' : 'good')}
+  </div>`;
+
+  const ownedRows = owned.map(c => {
+    const s = componentSummary(c);
+    const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ') || '—';
+    const firstVl = c.vehicleLineIds[0] || '';
+    return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
+      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td class="cell-sub">${esc(lines)}</td>
+      <td>${badge(s.worstGrade, GRADE_TONE[s.worstGrade])}</td>
+      <td>${badge(s.worstEmc, EMC_TONE[s.worstEmc])}</td>
     </tr>`;
   }).join('');
-  return `<table class="simple"><thead><tr><th>Vehicle line</th><th>EMC to ECE R10</th><th>Corporate EMC</th><th>Cyber (Reg 155)</th><th>Sign-off</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  const assignRows = areaRows.slice()
+    .sort((a, b) => Number(isOutstanding(b.area, b.r[b.area])) - Number(isOutstanding(a.area, a.r[a.area])))
+    .map(({ r, area }) => {
+      const c = COMPONENTS.find(x => x.id === r.componentId);
+      const vl = VEHICLE_LINES.find(x => x.id === r.vehicleLineId);
+      if (!c || !vl) return '';
+      const sub = r[area];
+      const statusLabel = area === 'emc' ? emcOverallStatus(sub) : sub.status;
+      const tone = area === 'emc' ? EMC_TONE[statusLabel] : GRADE_TONE[sub.status];
+      const outstanding = isOutstanding(area, sub);
+      return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
+        <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+        <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
+        <td>${AREA_LABELS[area]}</td>
+        <td>${badge(statusLabel, tone)}</td>
+        <td>${outstanding ? badge('Outstanding', 'warning') : badge('Approved', 'good')}</td>
+      </tr>`;
+    }).join('');
+
+  return `
+    <div class="card">${statHtml}</div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Components ${esc(eng)} owns</div><div class="card-sub">Click a row to open its ticket</div></div></div>
+      ${ownedRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle lines</th><th>GRADE</th><th>EMC</th></tr></thead><tbody>${ownedRows}</tbody></table>` : '<div class="empty-state">No components owned by this engineer.</div>'}
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Reviews assigned to ${esc(eng)}</div><div class="card-sub">GRADE / EMC / FUSA / Cyber — outstanding first</div></div></div>
+      ${assignRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Area</th><th>Status</th><th></th></tr></thead><tbody>${assignRows}</tbody></table>` : '<div class="empty-state">No reviews assigned to this engineer.</div>'}
+    </div>
+  `;
 }
-function renderOverallStatusTile(lines) {
-  if (!lines.length) return '<div class="empty-state">No vehicle lines to show.</div>';
-  const sorted = [...lines].sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
-  const rows = sorted.map(vl => {
+
+// ---- By vehicle line → model year ----
+function ecasVehicleHtml(vlId) {
+  const vl = VEHICLE_LINES.find(v => v.id === vlId);
+  if (!vl) return '<div class="card"><div class="empty-state">No vehicle lines defined yet — add one in the Programme tab first.</div></div>';
+  const recs = recordsForVehicleLine(vl.id);
+  const [gateLabel, gateDate] = nextGateInfo(vl);
+  const vc = getVehicleCompliance(vl.id);
+  const outstanding = area => recs.filter(r => isOutstanding(area, r[area])).length;
+  const comps = COMPONENTS.filter(c => c.vehicleLineIds.includes(vl.id));
+
+  const compRows = comps.map(c => {
+    const r = recs.find(x => x.componentId === c.id);
+    if (!r) return '';
+    return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
+      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td class="cell-sub">${esc(c.supplier)}</td>
+      <td>${badge(r.grade.status, GRADE_TONE[r.grade.status])}</td>
+      <td>${badge(emcOverallStatus(r.emc), EMC_TONE[emcOverallStatus(r.emc)])}</td>
+      <td>${badge(r.fusa.status, FUSA_TONE[r.fusa.status])}</td>
+      <td>${badge(r.cyber.status, CYBER_TONE[r.cyber.status])}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${esc(vl.nameplate)} ${esc(vl.my)}</div><div class="card-sub">${esc(vl.programme)} — ${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}</div></div>
+        <div style="display:flex; gap:8px;">
+          <button class="theme-toggle" data-open-vehicle="${vl.id}">Full vehicle status →</button>
+          <button class="theme-toggle" data-open-compliance="${vl.id}">Vehicle compliance →</button>
+        </div>
+      </div>
+      <div class="stat-row" style="grid-template-columns:repeat(5,1fr);">
+        ${statTile('Next gateway', esc(gateLabel), fmtDate(gateDate))}
+        ${statTile('Components fitted', comps.length, 'on this vehicle line')}
+        ${statTile('GRADE outstanding', outstanding('grade'), `of ${recs.length}`, outstanding('grade') ? 'critical' : 'good')}
+        ${statTile('EMC outstanding', outstanding('emc'), `of ${recs.length}`, outstanding('emc') ? 'critical' : 'good')}
+        ${statTile('FUSA / Cyber outstanding', outstanding('fusa') + outstanding('cyber'), `of ${recs.length * 2}`, (outstanding('fusa') + outstanding('cyber')) ? 'critical' : 'good')}
+      </div>
+      <div class="kv-label" style="margin-top:14px;">Vehicle compliance</div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:6px;">
+        <div>${badge(vc.emcR10.status, VC_TONE[vc.emcR10.status])} <span class="cell-sub">EMC to ECE R10</span></div>
+        <div>${badge(vc.corporateEmc.status, VC_TONE[vc.corporateEmc.status])} <span class="cell-sub">Corporate EMC</span></div>
+        <div>${badge(vc.cyberR155.status, VC_TONE[vc.cyberR155.status])} <span class="cell-sub">Cyber (Reg 155)</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Components on ${esc(vl.nameplate)} ${esc(vl.my)}</div><div class="card-sub">Click a row to open its ticket</div></div></div>
+      ${compRows ? `<table class="simple"><thead><tr><th>Component</th><th>Supplier</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th></tr></thead><tbody>${compRows}</tbody></table>` : '<div class="empty-state">No components fitted to this vehicle line yet.</div>'}
+    </div>
+  `;
+}
+
+// ---- Live components ----
+function ecasLiveComponentsHtml() {
+  const liveIds = new Set(liveVehicleLines().map(v => v.id));
+  const liveComponents = COMPONENTS.filter(c => c.vehicleLineIds.some(id => liveIds.has(id)));
+  const liveProductIdentities = new Set(liveComponents.map(c => `${c.partNumber.prefix}-${c.partNumber.base}`));
+  const recs = allValidRecords().filter(r => liveIds.has(r.vehicleLineId));
+
+  const perComponent = liveComponents.map(c => {
+    const myRecs = recs.filter(r => r.componentId === c.id);
+    const out = { grade: 0, emc: 0, fusa: 0, cyber: 0 };
+    myRecs.forEach(r => ['grade', 'emc', 'fusa', 'cyber'].forEach(a => { if (isOutstanding(a, r[a])) out[a]++; }));
+    return { c, out, total: out.grade + out.emc + out.fusa + out.cyber };
+  }).filter(x => x.total >= 0).sort((a, b) => b.total - a.total);
+
+  const totals = { grade: 0, emc: 0, fusa: 0, cyber: 0 };
+  perComponent.forEach(x => { totals.grade += x.out.grade; totals.emc += x.out.emc; totals.fusa += x.out.fusa; totals.cyber += x.out.cyber; });
+
+  const rows = perComponent.filter(x => x.total > 0).slice(0, 25).map(({ c, out, total }) => {
+    const lines = c.vehicleLineIds.filter(id => liveIds.has(id)).map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ');
+    const firstVl = c.vehicleLineIds.find(id => liveIds.has(id)) || '';
+    return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
+      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td class="cell-sub">${esc(lines)}</td>
+      <td>${out.grade || '—'}</td><td>${out.emc || '—'}</td><td>${out.fusa || '—'}</td><td>${out.cyber || '—'}</td>
+      <td><strong>${total}</strong></td>
+    </tr>`;
+  }).join('');
+  const withWork = perComponent.filter(x => x.total > 0).length;
+
+  return `
+    <div class="card">
+      <div class="stat-row" style="grid-template-columns:repeat(5,1fr);">
+        ${statTile('Live components', liveProductIdentities.size, 'unique prefix + base, fitted to a live car line')}
+        ${statTile('Outstanding GRADE', totals.grade, 'reviews not yet complete', totals.grade ? 'critical' : 'good')}
+        ${statTile('Outstanding EMC', totals.emc, 'not yet compliant', totals.emc ? 'critical' : 'good')}
+        ${statTile('Outstanding FUSA', totals.fusa, 'not yet complete', totals.fusa ? 'critical' : 'good')}
+        ${statTile('Outstanding Cyber', totals.cyber, 'not yet complete', totals.cyber ? 'critical' : 'good')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Work remaining, by component</div><div class="card-sub">${withWork} of ${liveComponents.length} live components have open work — most outstanding first, click a row to open its ticket</div></div></div>
+      ${rows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle lines</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th><th>Total to do</th></tr></thead><tbody>${rows}</tbody></table>
+      ${withWork > 25 ? `<div class="cell-sub" style="margin-top:8px;">+ ${withWork - 25} more — see Components view</div>` : ''}` : '<div class="empty-state">No outstanding work on live components right now.</div>'}
+    </div>
+  `;
+}
+
+// ---- Live vehicles ----
+function ecasLiveVehiclesHtml() {
+  const lines = liveVehicleLines().sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]);
+  const rows = lines.map(vl => {
     const recs = recordsForVehicleLine(vl.id);
+    const out = { grade: 0, emc: 0, fusa: 0, cyber: 0 };
+    recs.forEach(r => ['grade', 'emc', 'fusa', 'cyber'].forEach(a => { if (isOutstanding(a, r[a])) out[a]++; }));
     const [gateLabel, gateDate] = nextGateInfo(vl);
-    const gradeOpen = recs.reduce((s, r) => s + r.grade.openIssues, 0);
-    const gradeTotal = recs.reduce((s, r) => s + r.grade.openIssues + r.grade.closedIssues, 0);
-    const emcOpen = recs.reduce((s, r) => s + r.emc.subTests.filter(st => st.result !== 'Compliant' && st.result !== 'No Test Required').length, 0);
-    const emcTotal = recs.reduce((s, r) => s + r.emc.subTests.length, 0);
-    return `<tr data-vline="${vl.id}">
-      <td>${esc(vl.nameplate)} ${vl.my}<div class="cell-sub">${esc(vl.programme)}</div></td>
+    return { vl, out, total: out.grade + out.emc + out.fusa + out.cyber, gateLabel, gateDate };
+  });
+  const totalOutstanding = rows.reduce((s, r) => s + r.total, 0);
+  const urgentCount = rows.filter(r => r.vl.phase === 'late' && r.total > 0).length;
+
+  const bodyRows = rows.map(({ vl, out, total, gateLabel, gateDate }) => `
+    <tr data-open-vehicle="${vl.id}">
+      <td>${esc(vl.nameplate)} ${esc(vl.my)}<div class="cell-sub">${esc(vl.programme)}</div></td>
       <td>${badge(vl.phaseLabel, PHASE_TONE[vl.phase])}</td>
       <td>${esc(gateLabel)}<div class="cell-sub">${fmtDate(gateDate)}</div></td>
-      <td>GRADE ${gradeOpen} open of ${gradeTotal}</td>
-      <td>EMC ${emcOpen} open of ${emcTotal}</td>
-    </tr>`;
-  }).join('');
-  return `<table class="simple"><thead><tr><th>Vehicle line</th><th>Programme phase</th><th>Next gateway</th><th>GRADE</th><th>EMC</th></tr></thead><tbody>${rows}</tbody></table>`;
+      <td>${out.grade}</td><td>${out.emc}</td><td>${out.fusa}</td><td>${out.cyber}</td>
+      <td><strong>${total}</strong></td>
+    </tr>`).join('');
+
+  return `
+    <div class="card">
+      <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+        ${statTile('Live vehicle lines', lines.length, 'currently being worked')}
+        ${statTile('Total work outstanding', totalOutstanding, 'across GRADE / EMC / FUSA / Cyber', totalOutstanding ? 'critical' : 'good')}
+        ${statTile('Late programme with work open', urgentCount, 'gate inside 180 days', urgentCount ? 'critical' : 'good')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Work remaining, by vehicle line</div><div class="card-sub">Most urgent gateway first — click a row for the full vehicle status</div></div></div>
+      ${bodyRows ? `<table class="simple"><thead><tr><th>Vehicle line</th><th>Phase</th><th>Next gateway</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th><th>Total to do</th></tr></thead><tbody>${bodyRows}</tbody></table>` : '<div class="empty-state">No live vehicle lines right now.</div>'}
+    </div>
+  `;
 }
 
-function renderAttentionTable(activeRecords) {
-  const sortBy = document.getElementById('attentionSort').value;
-  let attention = (activeRecords || RECORDS).filter(r => r.emc.resultStatus === 'Non-Compliant' || r.grade.openIssues >= 3)
-    .map(r => { const vl = VEHICLE_LINES.find(x => x.id === r.vehicleLineId); return { r, vl, due: nextGateInfo(vl)[1] }; });
-  if (sortBy === 'due') attention.sort((a, b) => a.due - b.due);
-  else attention.sort((a, b) => { const ra = a.r.emc.resultStatus === 'Non-Compliant' ? 0 : 1; const rb = b.r.emc.resultStatus === 'Non-Compliant' ? 0 : 1; return ra - rb || b.r.grade.openIssues - a.r.grade.openIssues; });
+// ---- By topic ----
+function ecasTopicHtml(topic) {
+  const meta = TOPIC_META[topic];
+  const liveIds = new Set(liveVehicleLines().map(v => v.id));
+  const recs = allValidRecords().filter(r => liveIds.has(r.vehicleLineId));
 
-  const rows = attention.slice(0, 12).map(({ r, vl, due }) => {
+  const all = {}; meta.stages.forEach(s => all[s] = 0);
+  const lineRows = liveVehicleLines().sort((a, b) => nextGateInfo(a)[1] - nextGateInfo(b)[1]).map(vl => {
+    const lrecs = recs.filter(r => r.vehicleLineId === vl.id);
+    const counts = {}; meta.stages.forEach(s => counts[s] = 0);
+    lrecs.forEach(r => { const st = topicStatusFor(topic, r); counts[st]++; all[st]++; });
+    return `<div class="stack-row">
+      <div><div class="stack-line-label">${esc(vl.nameplate)} ${esc(vl.my)}</div><div class="stack-line-sub">${esc(vl.programme)}</div></div>
+      <div class="stack-bar">${stackedStatusBar(counts, meta.stages, meta.color, lrecs.length || 1)}</div>
+      <div class="stack-total">${lrecs.length}</div>
+    </div>`;
+  }).join('');
+
+  const outstanding = recs.filter(r => isOutstanding(topic, r[topic]));
+  const attention = recs.filter(r => {
+    if (topic === 'grade') return r.grade.openIssues >= 3;
+    if (topic === 'emc') return r.emc.resultStatus === 'Non-Compliant';
+    return r[topic].riskCategory === 'Major Concern';
+  }).map(r => { const vl = VEHICLE_LINES.find(v => v.id === r.vehicleLineId); return { r, vl, due: vl ? nextGateInfo(vl)[1] : 0 }; })
+    .sort((a, b) => a.due - b.due);
+
+  const attentionRows = attention.slice(0, 15).map(({ r, vl }) => {
     const c = COMPONENTS.find(x => x.id === r.componentId);
-    const reasons = [];
-    if (r.emc.resultStatus === 'Non-Compliant') reasons.push(badge('EMC Non-Compliant', 'critical'));
-    if (r.grade.openIssues >= 3) reasons.push(badge(r.grade.openIssues + ' open GRADE issues', 'warning'));
-    return `<tr data-comp="${c.id}" data-vline="${vl.id}">
+    if (!c || !vl) return '';
+    const status = topicStatusFor(topic, r);
+    return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
       <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
-      <td>${esc(vl.nameplate)} ${vl.my}</td>
-      <td>${esc(c.supplier)}</td>
-      <td>${reasons.join(' ')}</td>
-      <td>${fmtDate(due)}</td>
+      <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
+      <td>${badge(status, meta.tone[status])}</td>
+      <td>${esc(r[topic].engineer || '—')}</td>
     </tr>`;
   }).join('');
-  document.getElementById('attentionTable').innerHTML = attention.length ? `
-    <table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Supplier</th><th>Reason</th><th>Due</th></tr></thead><tbody>${rows}</tbody></table>
-    ${attention.length > 12 ? `<div class="cell-sub" style="margin-top:8px;">+ ${attention.length - 12} more — see Components view</div>` : ''}
-  ` : `<div class="empty-state">Nothing needs attention right now.</div>`;
-  document.querySelectorAll('#attentionTable tbody tr').forEach(tr => tr.addEventListener('click', () => openComponentTicket(tr.dataset.comp, tr.dataset.vline)));
+
+  return `
+    <div class="card">
+      <div class="stat-row" style="grid-template-columns:repeat(3,1fr);">
+        ${statTile(meta.label + ' records (live)', recs.length, 'across live vehicle lines')}
+        ${statTile('Outstanding', outstanding.length, 'not yet approved', outstanding.length ? 'critical' : 'good')}
+        ${statTile('Needs attention', attention.length, topic === 'grade' ? '3+ open issues' : topic === 'emc' ? 'non-compliant results' : 'major concern risk', attention.length ? 'critical' : 'good')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">${meta.label} status by vehicle line</div><div class="card-sub">Live vehicle lines only</div></div></div>
+      ${lineRows || '<div class="empty-state">No live vehicle lines to show.</div>'}
+      <div class="legend">${legendFor(meta.stages, meta.color, all)}</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">${meta.label} needs attention</div><div class="card-sub">Click a row to open its ticket</div></div></div>
+      ${attentionRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Status</th><th>Engineer</th></tr></thead><tbody>${attentionRows}</tbody></table>` : '<div class="empty-state">Nothing needs attention right now.</div>'}
+    </div>
+  `;
 }
 
 /* ============================================================
@@ -1804,8 +2089,7 @@ function openComponentTicket(componentId, vehicleLineId) {
   const payload = { component: c, vehicleLines: vlList, records, initialVline: (vehicleLineId && vlIds.includes(vehicleLineId)) ? vehicleLineId : vlIds[0] };
   const json = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(json)));
-  location.href = location.pathname + '#ticket=' + b64;
-  location.reload();
+  window.open(location.pathname + '#ticket=' + b64, '_blank');
 }
 
 function initTicketPage(payload) {
@@ -1816,7 +2100,6 @@ function initTicketPage(payload) {
         <div class="brand"><div class="brand-title">EE Assurance Tracker</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
         <div class="topbar-right" style="margin-left:auto;">
           <span class="demo-pill">Ticket view</span>
-          <button class="theme-toggle" id="backToTrackerBtn">← Back to tracker</button>
           <button class="theme-toggle" id="exportTicketBtn">Export ticket (JSON)</button>
           <button class="theme-toggle" id="themeToggle">◐ Theme</button>
         </div>
@@ -1828,10 +2111,6 @@ function initTicketPage(payload) {
   document.getElementById('themeToggle').addEventListener('click', () => {
     const cur = document.documentElement.getAttribute('data-theme');
     document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-  });
-  document.getElementById('backToTrackerBtn').addEventListener('click', () => {
-    location.href = location.pathname;
-    location.reload();
   });
   document.getElementById('exportTicketBtn').addEventListener('click', () => {
     download(`${payload.component.name.replace(/[^a-z0-9]+/gi, '-')}_ticket.json`, JSON.stringify(payload, null, 2), 'application/json');
@@ -2061,7 +2340,7 @@ function initTicketPage(payload) {
         </div>`;
       }).join('');
       return `<div class="rr-row">
-        <div class="rr-row-head"><strong class="mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}-${esc(entry.partNumberSuffix || '?')}</strong><button class="icon-btn" data-change-rm="${i}">✕</button></div>
+        <div class="rr-row-head"><strong class="mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}-${esc(entry.partNumberSuffix || '?')}</strong>${entry.firstApproval ? `<span style="margin-left:8px;">${badge('1st Approved', 'good')}</span>` : ''}<button class="icon-btn" data-change-rm="${i}">✕</button></div>
         <div class="modal-grid2">
           <div class="field-inline"><label>Suffix this change is against</label><select data-change="${i}.partNumberSuffix">${selectOpts(suffixOptions, entry.partNumberSuffix)}</select></div>
           <div class="field-inline"><label>SCR / MOC reference</label><input type="text" data-change="${i}.scrRef" value="${esc(entry.scrRef)}" /></div>
@@ -2179,18 +2458,35 @@ function initTicketPage(payload) {
     const addBlockedBtn = document.getElementById('addBlocked');
     if (addBlockedBtn) addBlockedBtn.addEventListener('click', () => { c.hardwareCompliance.blockedMarkets.push({ market: '', reason: '' }); render(); });
   }
+  function firstApprovalField(sub) {
+    return `<div class="field-inline"><label>Date of first approval</label><input type="text" value="${sub.firstApprovalDate ? esc(fmtDate(new Date(sub.firstApprovalDate))) : '—'}" disabled /></div>`;
+  }
   function gradeTabHtml(rec) {
+    const checkRows = rec.grade.checklist.map((item, i) => `
+      <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${item.code}</span><span class="subtest-name">${esc(item.name)}</span></div>
+      <select data-gradecheck="${i}">${selectOpts(GRADE_CHECK_RESULTS, item.result)}</select></div>
+    `).join('');
     return `
       <div class="grade-grid">
+        <div class="field-inline"><label>Engineer</label><select data-f="grade.engineer">${selectOpts(ENGINEERS, rec.grade.engineer)}</select></div>
         <div class="field-inline"><label>Status</label><select data-f="grade.status">${selectOpts(GRADE_STAGES, rec.grade.status)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="grade.riskCategory">${selectOpts(RISK_CATEGORIES, rec.grade.riskCategory)}</select></div>
         <div class="field-inline"><label>Documents audited</label><input type="text" data-f="grade.documentsAudited" value="${esc(rec.grade.documentsAudited)}" /></div>
+      </div>
+      <div class="grade-grid">
         <div class="field-inline"><label>First review date</label><input type="text" data-f="grade.firstReviewDate" value="${esc(rec.grade.firstReviewDate || '')}" /></div>
+        <div class="field-inline"><label>HW level</label><input type="text" data-f="grade.hwLevel" value="${esc(rec.grade.hwLevel || '')}" placeholder="e.g. Rev C" /></div>
+        <div class="field-inline"><label>SW level</label><input type="text" data-f="grade.swLevel" value="${esc(rec.grade.swLevel || '')}" placeholder="e.g. v2.4.1" /></div>
+        ${firstApprovalField(rec.grade)}
       </div>
       <div class="kv-label">Meeting minutes</div>
       <textarea class="notes" data-f="grade.meetingNotes">${esc(rec.grade.meetingNotes || '')}</textarea>
       <div class="grade-link-card">📘 <div><strong>GRADE workbook</strong><div class="cell-sub">Open the interactive GRADE review workbook for this component to fill in the detailed checklist.</div></div>
         <a href="${esc(GRADE_WORKBOOK_URL)}" target="_blank" class="theme-toggle" style="margin-left:auto; text-decoration:none;">Open GRADE workbook →</a>
+      </div>
+      <div class="subtile">
+        <div class="kv-label" style="margin-bottom:8px;">List of tests to approve</div>
+        <div class="subtest-grid">${checkRows}</div>
       </div>
     `;
   }
@@ -2199,32 +2495,73 @@ function initTicketPage(payload) {
       <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${st.code}</span><span class="subtest-name">${esc(st.name)}</span></div>
       <select data-subtest="${i}">${selectOpts(['Compliant', 'Non-Compliant', 'Test in Progress', 'No Test Required'], st.result)}</select></div>
     `).join('');
+    const docRows = rec.emc.testPlanDocs.map((d, i) => `
+      <div class="rr-row">
+        <div class="rr-row-head"><strong>${esc(d.name) || 'Document'}</strong><button class="icon-btn" data-emcdoc-rm="${i}">✕</button></div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Document name</label><input type="text" data-emcdoc="${i}.name" value="${esc(d.name)}" /></div>
+          <div class="field-inline"><label>Location / link</label><input type="text" data-emcdoc="${i}.location" value="${esc(d.location)}" placeholder="https://… or file path" /></div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state">No EMC test plan documents uploaded yet.</div>';
     return `
       <div class="grade-grid">
+        <div class="field-inline"><label>Engineer</label><select data-f="emc.engineer">${selectOpts(ENGINEERS, rec.emc.engineer)}</select></div>
         <div class="field-inline"><label>Test plan status</label><select data-f="emc.planStatus">${selectOpts(EMC_PLAN_STAGES, rec.emc.planStatus)}</select></div>
         <div class="field-inline"><label>Test result status (reported state)</label><select data-f="emc.resultStatus">${selectOpts(EMC_RESULT_STAGES, rec.emc.resultStatus)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="emc.riskCategory">${selectOpts(RISK_CATEGORIES, rec.emc.riskCategory)}</select></div>
-        <div class="field-inline"><label>Documents audited (JLR EMC standard)</label><input type="text" data-f="emc.documentsAudited" value="${esc(rec.emc.documentsAudited)}" /></div>
       </div>
-      <div class="field-inline" style="max-width:320px; margin-bottom:14px;"><label>JLR EMC reviewer</label><input type="text" data-f="emc.reviewer" value="${esc(rec.emc.reviewer || '')}" /></div>
-      <div class="kv-label" style="margin-bottom:6px;">Sub-test results — change any result to see the reported state update</div>
-      <div class="subtest-grid">${subRows}</div>
-      <div class="kv-label" style="margin-top:14px;">Test report location</div>
-      <div class="loc-field">📄 <span class="mono">${esc(rec.emc.testReportLocation)}</span></div>
+      <div class="grade-grid">
+        <div class="field-inline"><label>Documents audited (JLR EMC standard)</label><input type="text" data-f="emc.documentsAudited" value="${esc(rec.emc.documentsAudited)}" /></div>
+        <div class="field-inline"><label>HW level</label><input type="text" data-f="emc.hwLevel" value="${esc(rec.emc.hwLevel || '')}" placeholder="e.g. Rev C" /></div>
+        <div class="field-inline"><label>SW level</label><input type="text" data-f="emc.swLevel" value="${esc(rec.emc.swLevel || '')}" placeholder="e.g. v2.4.1" /></div>
+        ${firstApprovalField(rec.emc)}
+      </div>
+      <div class="kv-label">Comments</div>
+      <textarea class="notes" data-f="emc.comments">${esc(rec.emc.comments || '')}</textarea>
+
+      <div class="card-head" style="margin-top:14px;"><div><div class="card-title">EMC test plan documents</div><div class="card-sub">Repository for uploaded test plan documents</div></div><button class="theme-toggle" id="addEmcDoc">+ Add document</button></div>
+      ${docRows}
+
+      <div class="subtile">
+        <div class="kv-label" style="margin-bottom:8px;">Summary of test results — change any result to see the reported state update</div>
+        <div class="subtest-grid">${subRows}</div>
+        <div class="kv-label" style="margin-top:14px;">Test report location</div>
+        <div class="loc-field">📄 <span class="mono">${esc(rec.emc.testReportLocation)}</span></div>
+      </div>
     `;
   }
   function genericTabHtml(sub, stages, label) {
     return `
       <div class="grade-grid">
+        <div class="field-inline"><label>Engineer</label><select data-f="sub.engineer">${selectOpts(ENGINEERS, sub.engineer)}</select></div>
         <div class="field-inline"><label>Status</label><select data-f="sub.status">${selectOpts(stages, sub.status)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="sub.riskCategory">${selectOpts(RISK_CATEGORIES, sub.riskCategory)}</select></div>
         <div class="field-inline"><label>Documents audited</label><input type="text" data-f="sub.documentsAudited" value="${esc(sub.documentsAudited || '')}" /></div>
-        <div class="field-inline"><label>Reviewer</label><input type="text" data-f="sub.reviewer" value="${esc(sub.reviewer || '')}" /></div>
+      </div>
+      <div class="grade-grid">
+        <div class="field-inline"><label>HW level</label><input type="text" data-f="sub.hwLevel" value="${esc(sub.hwLevel || '')}" placeholder="e.g. Rev C" /></div>
+        <div class="field-inline"><label>SW level</label><input type="text" data-f="sub.swLevel" value="${esc(sub.swLevel || '')}" placeholder="e.g. v2.4.1" /></div>
+        ${firstApprovalField(sub)}
       </div>
       <div class="kv-label">Notes</div>
       <textarea class="notes" data-f="sub.notes">${esc(sub.notes || '')}</textarea>
       <div class="ticket-notice" style="margin-top:12px;">${esc(label)} tracking is a placeholder — headings copied over from GRADE until the real workflow is defined.</div>
     `;
+  }
+  // Fires when a record's approval-bearing field (GRADE status, EMC reported state, FUSA/Cyber status)
+  // reaches its "approved" value for the first time: stamps the date and logs a baseline entry into the
+  // component's What's Changed log, flagged so it renders as the "1st Approved" entry there.
+  function checkFirstApproval(area, sub) {
+    if (sub.firstApprovalDate) return false;
+    if (!APPROVED_TRIGGER[area](sub)) return false;
+    sub.firstApprovalDate = isoDate(TODAY);
+    c.changeLog.unshift(makeChangeEntry({
+      partNumberSuffix: c.partNumber.suffix,
+      descriptor: `First approved — ${AREA_LABELS[area]} (HW ${sub.hwLevel || '—'} / SW ${sub.swLevel || '—'})`,
+      firstApproval: true,
+    }));
+    return true;
   }
   function wireTabInputs(rec) {
     document.querySelectorAll('#ticketTabBody [data-f]').forEach(el => {
@@ -2233,15 +2570,29 @@ function initTicketPage(payload) {
       el.addEventListener(ev, () => {
         const target = path[0] === 'grade' ? rec.grade : path[0] === 'emc' ? rec.emc : (activeTab === 'fusa' ? rec.fusa : rec.cyber);
         target[path[1]] = el.value;
+        const area = path[0] === 'grade' ? 'grade' : path[0] === 'emc' ? 'emc' : activeTab;
+        const isApprovalField = (area === 'grade' && path[1] === 'status') || (area === 'emc' && path[1] === 'resultStatus') || ((area === 'fusa' || area === 'cyber') && path[1] === 'status');
+        if (isApprovalField && checkFirstApproval(area, target)) renderTabBody(rec);
       });
     });
     document.querySelectorAll('#ticketTabBody [data-subtest]').forEach(el => {
       el.addEventListener('change', () => {
         rec.emc.subTests[Number(el.dataset.subtest)].result = el.value;
         rec.emc.resultStatus = deriveEmcResultStatus(rec.emc.subTests, rec.emc.resultStatus);
+        checkFirstApproval('emc', rec.emc);
         renderTabBody(rec);
       });
     });
+    document.querySelectorAll('#ticketTabBody [data-gradecheck]').forEach(el => {
+      el.addEventListener('change', () => { rec.grade.checklist[Number(el.dataset.gradecheck)].result = el.value; });
+    });
+    document.querySelectorAll('#ticketTabBody [data-emcdoc]').forEach(el => {
+      const [idx, key] = el.dataset.emcdoc.split('.');
+      el.addEventListener('blur', () => { rec.emc.testPlanDocs[Number(idx)][key] = el.value; });
+    });
+    document.querySelectorAll('#ticketTabBody [data-emcdoc-rm]').forEach(el => el.addEventListener('click', () => { rec.emc.testPlanDocs.splice(Number(el.dataset.emcdocRm), 1); renderTabBody(rec); }));
+    const addEmcDocBtn = document.getElementById('addEmcDoc');
+    if (addEmcDocBtn) addEmcDocBtn.addEventListener('click', () => { rec.emc.testPlanDocs.push({ name: '', location: '' }); renderTabBody(rec); });
   }
   // Derives the overall EMC "reported state" from the individual sub-test results, so changing a single
   // sub-test's result is visibly reflected in the summary status. Non-Compliant on any sub-test always wins;
@@ -2340,8 +2691,12 @@ function initApp() {
   document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('modalOverlay').hidden) closeModal(); });
 
-  document.getElementById('hideSignedOffDash').addEventListener('change', renderDashboard);
-  document.getElementById('attentionSort').addEventListener('change', renderDashboard);
+  document.getElementById('ecasModeRow').addEventListener('click', e => {
+    const btn = e.target.closest('.ecas-mode-btn');
+    if (!btn) return;
+    dashMode = btn.dataset.mode;
+    renderDashboard();
+  });
   document.getElementById('addBrandBtn').addEventListener('click', addBrand);
   document.getElementById('newVlineBtn').addEventListener('click', () => openAddModelYearModal({}));
   document.getElementById('newComponentBtn').addEventListener('click', openNewComponentModal);
