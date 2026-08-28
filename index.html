@@ -359,6 +359,7 @@
     </div>
     <nav class="nav" id="nav">
       <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="nextaction">Next Action</button>
       <button data-view="programme">Programme</button>
       <button data-view="components">Components</button>
       <button data-view="vehicles">Vehicle Component Status</button>
@@ -424,6 +425,16 @@
       </div>
 
       <div id="ecasSummary"></div>
+    </section>
+
+    <!-- ============ NEXT ACTION ============ -->
+    <section id="view-nextaction" class="view" hidden>
+      <h1 class="page-title">Next action</h1>
+      <p class="page-sub">Pick a user to see their to-do list — components they own, reviews they're signing off, and open tasks assigned to or by them. In production this would be driven by login.</p>
+      <div class="vfilter-row">
+        <select id="naUserSel"></select>
+      </div>
+      <div id="naWrap"></div>
     </section>
 
     <!-- ============ PROGRAMME ============ -->
@@ -791,6 +802,30 @@ function makeChangeEntry(overrides) {
   return Object.assign({ partNumberSuffix: '', scrRef: '', descriptor: '', semiCBomConfirmed: false, semiCBomLink: '', approvals }, overrides);
 }
 
+// "Next action" task record — a lightweight 2-way to-do between a component owner and the area
+// reviewer (GRADE / EMC / FUSA / Cyber engineer), assignable from either direction on that area's tab.
+const ACTION_TYPES = {
+  grade: ['Set up grade review', 'Set up supplier meeting', 'Component owner to support design review', 'General task'],
+  emc: ['Deliver EMC test plan', 'Review EMC test plan', 'Deliver EMC test report', 'Review EMC test report', 'General task'],
+  fusa: ['Set up FUSA review', 'Deliver FUSA evidence', 'Review FUSA evidence', 'General task'],
+  cyber: ['Set up Cyber review', 'Deliver Cyber evidence', 'Review Cyber evidence', 'General task'],
+};
+let taskCounter = 0;
+function makeTask(overrides) {
+  taskCounter++;
+  return Object.assign({
+    id: 'task' + taskCounter, area: 'grade', vehicleLineId: '', actionType: ACTION_TYPES.grade[0],
+    note: '', dueDate: '', assignedBy: '', assignedTo: '', status: 'Open', createdDate: isoDate(TODAY),
+  }, overrides);
+}
+// Default due-date suggestion: 4 weeks before the vehicle line's next programme gateway, so evidence
+// (test plans/reports, review sign-off) lands in time to be reviewed before that gate.
+function suggestedTaskDueDate(vl) {
+  if (!vl) return '';
+  const [, gateDate] = nextGateInfo(vl);
+  return isoDate(addDays(gateDate, -28));
+}
+
 const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
   const id = 'c' + (i + 1);
   const nLines = pickWeighted([[1, 5], [2, 4], [3, 2]]);
@@ -810,6 +845,7 @@ const COMPONENTS = COMPONENT_TYPES.map((name, i) => {
     ],
     changeLog: [],
     hardwareCompliance: { transceivers: [], replaceableBattery: false, marketList: [], blockedMarkets: [] },
+    tasks: [],
   };
 });
 let compCounter = COMPONENTS.length;
@@ -1020,6 +1056,22 @@ COMPONENTS.forEach(c => {
       componentId: c.id, vehicleLineId: vlId,
       grade: gradeObj, emc: emcObj, fusa: fusaObj, cyber: cyberObj,
     });
+
+    // Seed a plausible "next action" task on some records — alternating direction between the
+    // component owner and the area reviewer — so the new Next Action tab has example data to show.
+    if (rand() < 0.35) {
+      const area = pick(['grade', 'emc', 'fusa', 'cyber']);
+      const areaObj = { grade: gradeObj, emc: emcObj, fusa: fusaObj, cyber: cyberObj }[area];
+      const ownerFirst = rand() < 0.5;
+      const assignedBy = ownerFirst ? c.engineer : areaObj.engineer;
+      const assignedTo = ownerFirst ? areaObj.engineer : c.engineer;
+      const done = rand() < 0.25;
+      c.tasks.push(makeTask({
+        area, vehicleLineId: vlId, actionType: pick(ACTION_TYPES[area]),
+        dueDate: suggestedTaskDueDate(vl), assignedBy, assignedTo,
+        status: done ? 'Done' : 'Open', createdDate: isoDate(addDays(TODAY, -randInt(2, 40))),
+      }));
+    }
   });
 });
 
@@ -1422,6 +1474,120 @@ function ecasTopicHtml(topic) {
     <div class="card">
       <div class="card-head"><div><div class="card-title">${meta.label} needs attention</div><div class="card-sub">Click a row to open its ticket</div></div></div>
       ${attentionRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Status</th><th>Engineer</th></tr></thead><tbody>${attentionRows}</tbody></table>` : '<div class="empty-state">Nothing needs attention right now.</div>'}
+    </div>
+  `;
+}
+
+/* ============================================================
+   NEXT ACTION — per-user to-do list. Stands in for "what you'd see when you log in": for this
+   POC a plain user picker drives it instead of a real identity/session.
+   ============================================================ */
+let naUser = ENGINEERS[0];
+function populateNaUserSelect() {
+  const sel = document.getElementById('naUserSel');
+  if (!sel.options.length) sel.innerHTML = selectOpts(ENGINEERS, naUser);
+}
+function renderNextAction() {
+  populateNaUserSelect();
+  document.getElementById('naUserSel').value = naUser;
+  document.getElementById('naWrap').innerHTML = naSummaryHtml(naUser);
+  wireNaWrap();
+}
+function wireNaWrap() {
+  document.querySelectorAll('#naWrap tr[data-open-comp]').forEach(tr => tr.addEventListener('click', (e) => {
+    if (e.target.closest('.toggle-chip')) return; // don't navigate away when just ticking a task done
+    openComponentTicket(tr.dataset.openComp, tr.dataset.openVline || undefined);
+  }));
+  document.querySelectorAll('#naWrap [data-task-toggle]').forEach(el => el.addEventListener('change', () => {
+    const [compId, taskId] = el.dataset.taskToggle.split('|');
+    const comp = COMPONENTS.find(x => x.id === compId);
+    const t = comp && comp.tasks.find(x => x.id === taskId);
+    if (t) t.status = el.checked ? 'Done' : 'Open';
+    renderNextAction();
+  }));
+}
+function naSummaryHtml(user) {
+  const owned = COMPONENTS.filter(c => c.engineer === user);
+  const recs = allValidRecords();
+  const signoff = [];
+  ['grade', 'emc', 'fusa', 'cyber'].forEach(area => recs.forEach(r => { if (r[area].engineer === user) signoff.push({ r, area }); }));
+
+  const allTasks = COMPONENTS.flatMap(c => (c.tasks || []).map(t => ({ ...t, c })));
+  const toDo = allTasks.filter(t => t.assignedTo === user && t.status !== 'Done')
+    .sort((a, b) => (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31'));
+  const assignedByMe = allTasks.filter(t => t.assignedBy === user && t.status !== 'Done')
+    .sort((a, b) => (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31'));
+
+  const statHtml = `<div class="stat-row" style="grid-template-columns:repeat(4,1fr);">
+    ${statTile('Open tasks for you', toDo.length, 'across all components', toDo.length ? 'critical' : 'good')}
+    ${statTile("Tasks you've assigned", assignedByMe.length, 'still open with someone else')}
+    ${statTile('Components owned', owned.length, 'as component owner')}
+    ${statTile('Reviews signing off', signoff.length, 'across GRADE / EMC / FUSA / Cyber')}
+  </div>`;
+
+  function taskRow(t) {
+    const vl = VEHICLE_LINES.find(v => v.id === t.vehicleLineId);
+    const overdue = t.dueDate && new Date(t.dueDate) < TODAY && t.status !== 'Done';
+    return `<tr data-open-comp="${t.c.id}" data-open-vline="${t.vehicleLineId}">
+      <td>${esc(t.actionType)}<div class="cell-sub">${AREA_LABELS[t.area]}</div></td>
+      <td>${esc(t.c.name)}<div class="cell-sub">${vl ? esc(vl.nameplate) + ' ' + esc(vl.my) : '—'}</div></td>
+      <td class="cell-sub">${t.assignedBy === user ? `To ${esc(t.assignedTo || '—')}` : `From ${esc(t.assignedBy || '—')}`}</td>
+      <td>${t.dueDate ? fmtDate(new Date(t.dueDate)) : '—'}</td>
+      <td>${overdue ? badge('Overdue', 'critical') : badge(t.status, t.status === 'Done' ? 'good' : 'progress')}</td>
+      <td><label class="toggle-chip ${t.status === 'Done' ? 'on' : ''}"><input type="checkbox" data-task-toggle="${t.c.id}|${t.id}" ${t.status === 'Done' ? 'checked' : ''}/> Done</label></td>
+    </tr>`;
+  }
+  const toDoRows = toDo.map(taskRow).join('');
+  const assignedByRows = assignedByMe.map(taskRow).join('');
+
+  const ownedRows = owned.map(c => {
+    const s = componentSummary(c);
+    const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ') || '—';
+    const firstVl = c.vehicleLineIds[0] || '';
+    return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
+      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td class="cell-sub">${esc(lines)}</td>
+      <td>${badge(s.worstGrade, GRADE_TONE[s.worstGrade])}</td>
+      <td>${badge(s.worstEmc, EMC_TONE[s.worstEmc])}</td>
+      <td>${badge(s.worstFusa, FUSA_TONE[s.worstFusa])}</td>
+      <td>${badge(s.worstCyber, CYBER_TONE[s.worstCyber])}</td>
+    </tr>`;
+  }).join('');
+
+  const signoffRows = signoff.slice()
+    .sort((a, b) => Number(isOutstanding(b.area, b.r[b.area])) - Number(isOutstanding(a.area, a.r[a.area])))
+    .map(({ r, area }) => {
+      const c = COMPONENTS.find(x => x.id === r.componentId);
+      const vl = VEHICLE_LINES.find(x => x.id === r.vehicleLineId);
+      if (!c || !vl) return '';
+      const sub = r[area];
+      const statusLabel = area === 'emc' ? emcOverallStatus(sub) : sub.status;
+      const tone = area === 'emc' ? EMC_TONE[statusLabel] : GRADE_TONE[sub.status];
+      return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
+        <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+        <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
+        <td>${AREA_LABELS[area]}</td>
+        <td>${badge(statusLabel, tone)}</td>
+      </tr>`;
+    }).join('');
+
+  return `
+    <div class="card">${statHtml}</div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Your to-do list</div><div class="card-sub">Tasks assigned to ${esc(user)} — click a row to open its ticket, or tick Done to close it out</div></div></div>
+      ${toDoRows ? `<table class="simple"><thead><tr><th>Action</th><th>Component</th><th>From / To</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>${toDoRows}</tbody></table>` : `<div class="empty-state">Nothing outstanding — ${esc(user)} is all caught up.</div>`}
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tasks ${esc(user)} has assigned to others</div><div class="card-sub">Still open, waiting on someone else</div></div></div>
+      ${assignedByRows ? `<table class="simple"><thead><tr><th>Action</th><th>Component</th><th>From / To</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>${assignedByRows}</tbody></table>` : '<div class="empty-state">No open tasks assigned by this user.</div>'}
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Components ${esc(user)} owns</div><div class="card-sub">Click a row to open its ticket</div></div></div>
+      ${ownedRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle lines</th><th>GRADE</th><th>EMC</th><th>FUSA</th><th>Cyber</th></tr></thead><tbody>${ownedRows}</tbody></table>` : '<div class="empty-state">No components owned by this user.</div>'}
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Components ${esc(user)} is signing off</div><div class="card-sub">As GRADE / EMC / FUSA / Cyber engineer</div></div></div>
+      ${signoffRows ? `<table class="simple"><thead><tr><th>Component</th><th>Vehicle line</th><th>Area</th><th>Status</th></tr></thead><tbody>${signoffRows}</tbody></table>` : '<div class="empty-state">Not assigned as a reviewer on anything right now.</div>'}
     </div>
   `;
 }
@@ -2067,6 +2233,7 @@ function openNewComponentModal() {
       ],
       changeLog: [],
       hardwareCompliance: { transceivers: [], replaceableBattery: false, marketList: [], blockedMarkets: [] },
+      tasks: [],
     };
     COMPONENTS.push(c);
     ensureRecordsForComponent(c);
@@ -2097,7 +2264,7 @@ function initTicketPage(payload) {
   document.body.innerHTML = `
     <div id="app">
       <header class="topbar">
-        <div class="brand"><div class="brand-title">EE Assurance Tracker</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
+        <div class="brand"><div class="brand-title">ECAS</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
         <div class="topbar-right" style="margin-left:auto;">
           <span class="demo-pill">Ticket view</span>
           <button class="theme-toggle" id="exportTicketBtn">Export ticket (JSON)</button>
@@ -2179,8 +2346,8 @@ function initTicketPage(payload) {
     if (activeTab === 'hardware') { wrap.innerHTML = hardwareTabHtml(c); wireHardwareInputs(); return; }
     if (activeTab === 'grade') wrap.innerHTML = gradeTabHtml(rec);
     else if (activeTab === 'emc') wrap.innerHTML = emcTabHtml(rec);
-    else if (activeTab === 'fusa') wrap.innerHTML = genericTabHtml(rec.fusa, FUSA_STAGES, 'Functional safety');
-    else wrap.innerHTML = genericTabHtml(rec.cyber, CYBER_STAGES, 'Cyber security');
+    else if (activeTab === 'fusa') wrap.innerHTML = genericTabHtml(rec, 'fusa', FUSA_STAGES, 'Functional safety');
+    else wrap.innerHTML = genericTabHtml(rec, 'cyber', CYBER_STAGES, 'Cyber security');
     wireTabInputs(rec);
   }
   function nextSuffixCode(existing) {
@@ -2461,6 +2628,82 @@ function initTicketPage(payload) {
   function firstApprovalField(sub) {
     return `<div class="field-inline"><label>Date of first approval</label><input type="text" value="${sub.firstApprovalDate ? esc(fmtDate(new Date(sub.firstApprovalDate))) : '—'}" disabled /></div>`;
   }
+  // "Next action" widget — a 2-way task record between the component owner and this area's reviewer.
+  // Either side can assign a task to the other (or to themselves as a reminder); tasks live on the
+  // component (c.tasks) scoped to this area + vehicle line, so GRADE/EMC/FUSA/Cyber each track their own.
+  function taskSectionHtml(area, rec) {
+    const ownerName = c.engineer || '';
+    const reviewerName = rec[area].engineer || '';
+    const myTasks = (c.tasks || []).filter(t => t.area === area && t.vehicleLineId === rec.vehicleLineId);
+    const vl = VEHICLE_LINES.find(v => v.id === rec.vehicleLineId);
+    const suggested = suggestedTaskDueDate(vl);
+    const rows = myTasks.map(t => `
+      <div class="rr-row">
+        <div class="rr-row-head">
+          <strong>${esc(t.actionType)}</strong>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${t.status === 'Done' ? badge('Done', 'good') : badge('Open', 'progress')}
+            <button class="icon-btn" data-task-rm="${t.id}">✕</button>
+          </div>
+        </div>
+        <div class="modal-grid2">
+          <div class="cell-sub">From <strong>${esc(t.assignedBy || '—')}</strong> to <strong>${esc(t.assignedTo || '—')}</strong></div>
+          <div class="cell-sub">Due ${t.dueDate ? esc(fmtDate(new Date(t.dueDate))) : '—'}</div>
+        </div>
+        ${t.note ? `<div class="cell-sub" style="margin-top:6px;">${esc(t.note)}</div>` : ''}
+        <label class="toggle-chip ${t.status === 'Done' ? 'on' : ''}" style="margin-top:8px;"><input type="checkbox" data-task-done="${t.id}" ${t.status === 'Done' ? 'checked' : ''}/> Mark done</label>
+      </div>
+    `).join('');
+    return `
+      <div class="subtile" style="margin-top:18px;">
+        <div class="kv-label" style="margin-bottom:8px;">Next action</div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Action</label><select id="taskAction-${area}">${selectOpts(ACTION_TYPES[area], ACTION_TYPES[area][0])}</select></div>
+          <div class="field-inline"><label>Assign to</label>
+            <select id="taskAssignee-${area}">
+              <option value="owner">Component owner — ${esc(ownerName || 'unassigned')}</option>
+              <option value="reviewer">${AREA_LABELS[area]} engineer (me) — ${esc(reviewerName || 'unassigned')}</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-grid2">
+          <div class="field-inline"><label>Due date</label><input type="date" id="taskDue-${area}" value="${esc(suggested)}" /></div>
+          <div class="field-inline"><label>Note (optional)</label><input type="text" id="taskNote-${area}" placeholder="e.g. due before Production Review gate" /></div>
+        </div>
+        <button class="theme-toggle" id="taskAdd-${area}" style="margin-top:10px;">+ Assign task</button>
+        <div style="margin-top:14px;">${rows || '<div class="empty-state">No tasks assigned yet.</div>'}</div>
+      </div>
+    `;
+  }
+  function wireTaskSection(area, rec) {
+    const addBtn = document.getElementById(`taskAdd-${area}`);
+    if (addBtn) addBtn.addEventListener('click', () => {
+      const actionType = document.getElementById(`taskAction-${area}`).value;
+      const assigneeSel = document.getElementById(`taskAssignee-${area}`).value;
+      const dueDate = document.getElementById(`taskDue-${area}`).value;
+      const note = document.getElementById(`taskNote-${area}`).value.trim();
+      const ownerName = c.engineer, reviewerName = rec[area].engineer;
+      const assignedTo = assigneeSel === 'owner' ? ownerName : reviewerName;
+      const assignedBy = assigneeSel === 'owner' ? reviewerName : ownerName;
+      if (!assignedTo) { alert('Set the ' + (assigneeSel === 'owner' ? 'component owner' : AREA_LABELS[area] + ' engineer') + ' first.'); return; }
+      c.tasks = c.tasks || [];
+      c.tasks.push(makeTask({ area, vehicleLineId: rec.vehicleLineId, actionType, dueDate, note, assignedBy, assignedTo }));
+      renderTabBody(rec);
+    });
+    document.querySelectorAll('[data-task-done]').forEach(el => {
+      el.addEventListener('change', () => {
+        const t = (c.tasks || []).find(x => x.id === el.dataset.taskDone);
+        if (t) t.status = el.checked ? 'Done' : 'Open';
+        renderTabBody(rec);
+      });
+    });
+    document.querySelectorAll('[data-task-rm]').forEach(el => {
+      el.addEventListener('click', () => {
+        c.tasks = (c.tasks || []).filter(x => x.id !== el.dataset.taskRm);
+        renderTabBody(rec);
+      });
+    });
+  }
   function gradeTabHtml(rec) {
     const checkRows = rec.grade.checklist.map((item, i) => `
       <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${item.code}</span><span class="subtest-name">${esc(item.name)}</span></div>
@@ -2481,6 +2724,7 @@ function initTicketPage(payload) {
       </div>
       <div class="kv-label">Meeting minutes</div>
       <textarea class="notes" data-f="grade.meetingNotes">${esc(rec.grade.meetingNotes || '')}</textarea>
+      ${taskSectionHtml('grade', rec)}
       <div class="grade-link-card">📘 <div><strong>GRADE workbook</strong><div class="cell-sub">Open the interactive GRADE review workbook for this component to fill in the detailed checklist.</div></div>
         <a href="${esc(GRADE_WORKBOOK_URL)}" target="_blank" class="theme-toggle" style="margin-left:auto; text-decoration:none;">Open GRADE workbook →</a>
       </div>
@@ -2519,6 +2763,7 @@ function initTicketPage(payload) {
       </div>
       <div class="kv-label">Comments</div>
       <textarea class="notes" data-f="emc.comments">${esc(rec.emc.comments || '')}</textarea>
+      ${taskSectionHtml('emc', rec)}
 
       <div class="card-head" style="margin-top:14px;"><div><div class="card-title">EMC test plan documents</div><div class="card-sub">Repository for uploaded test plan documents</div></div><button class="theme-toggle" id="addEmcDoc">+ Add document</button></div>
       ${docRows}
@@ -2531,7 +2776,8 @@ function initTicketPage(payload) {
       </div>
     `;
   }
-  function genericTabHtml(sub, stages, label) {
+  function genericTabHtml(rec, area, stages, label) {
+    const sub = rec[area];
     return `
       <div class="grade-grid">
         <div class="field-inline"><label>Engineer</label><select data-f="sub.engineer">${selectOpts(ENGINEERS, sub.engineer)}</select></div>
@@ -2546,6 +2792,7 @@ function initTicketPage(payload) {
       </div>
       <div class="kv-label">Notes</div>
       <textarea class="notes" data-f="sub.notes">${esc(sub.notes || '')}</textarea>
+      ${taskSectionHtml(area, rec)}
       <div class="ticket-notice" style="margin-top:12px;">${esc(label)} tracking is a placeholder — headings copied over from GRADE until the real workflow is defined.</div>
     `;
   }
@@ -2593,6 +2840,7 @@ function initTicketPage(payload) {
     document.querySelectorAll('#ticketTabBody [data-emcdoc-rm]').forEach(el => el.addEventListener('click', () => { rec.emc.testPlanDocs.splice(Number(el.dataset.emcdocRm), 1); renderTabBody(rec); }));
     const addEmcDocBtn = document.getElementById('addEmcDoc');
     if (addEmcDocBtn) addEmcDocBtn.addEventListener('click', () => { rec.emc.testPlanDocs.push({ name: '', location: '' }); renderTabBody(rec); });
+    wireTaskSection(activeTab, rec);
   }
   // Derives the overall EMC "reported state" from the individual sub-test results, so changing a single
   // sub-test's result is visibly reflected in the summary status. Non-Compliant on any sub-test always wins;
@@ -2679,6 +2927,7 @@ function initApp() {
     if (!btn) return;
     setActiveView(btn.dataset.view);
     if (btn.dataset.view === 'dashboard') renderDashboard();
+    else if (btn.dataset.view === 'nextaction') renderNextAction();
     else if (btn.dataset.view === 'programme') renderProgramme();
     else if (btn.dataset.view === 'vehicles') refreshVehicleDetail();
     else if (btn.dataset.view === 'components') renderComponentTable();
@@ -2696,6 +2945,10 @@ function initApp() {
     if (!btn) return;
     dashMode = btn.dataset.mode;
     renderDashboard();
+  });
+  document.getElementById('naUserSel').addEventListener('change', () => {
+    naUser = document.getElementById('naUserSel').value;
+    renderNextAction();
   });
   document.getElementById('addBrandBtn').addEventListener('click', addBrand);
   document.getElementById('newVlineBtn').addEventListener('click', () => openAddModelYearModal({}));
