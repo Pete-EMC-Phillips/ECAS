@@ -319,6 +319,10 @@
   .pill-check { font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border-strong); color: var(--text-secondary); background: var(--surface-2); user-select:none; }
   .pill-check.active { background: var(--series-1); color: #fff; border-color: var(--series-1); }
   .pill-group-label { font-size: 10.5px; text-transform: uppercase; color: var(--text-muted); margin: 10px 0 4px; font-weight:650; }
+  .test-scope { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 10px; background: var(--page-plane); }
+  .test-scope summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-secondary); list-style: revert; }
+  .test-scope summary:hover { color: var(--text-primary); }
+  .test-scope .pill-check { padding: 5px 10px; font-size: 11px; }
 
   /* ---------------- programme tab ---------------- */
   .pgm-brand { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
@@ -367,7 +371,8 @@
       <button data-view="roadmap">Roadmap</button>
     </nav>
     <div class="topbar-right">
-      <span class="demo-pill">Demo data</span>
+      <span class="demo-pill" title="Saved to this browser — component tickets opened from here share the same saved data.">Demo data · saved in this browser</span>
+      <button class="theme-toggle" id="resetDemoBtn" title="Clear saved demo data and start over with the original generated dataset">Reset demo data</button>
       <button class="theme-toggle" id="themeToggle" title="Toggle light/dark">◐ Theme</button>
     </div>
   </header>
@@ -791,6 +796,12 @@ function makeSuffixRow(overrides) {
   return Object.assign({
     suffix: '', derivedFrom: null, dateIntroduced: '', complianceStatus: 'Compliance underway',
     approvedDerivativeOfSuffix: '', note: '', scrRef: '', testingRequired: '', changeInProgress: false,
+    // A component can have more than one suffix "current" at once — e.g. separate EU/China/US
+    // derivatives that all need to stay in production together for global manufacturing.
+    current: false,
+    // Manually-ticked subset of the full GRADE checklist / EMC sub-test list that this suffix's change
+    // actually needs re-testing — lets the GRADE/EMC tabs filter down to just that subset for recording results.
+    gradeTestsRequired: [], emcTestsRequired: [],
   }, overrides);
 }
 // "What's Changed" log: one entry per SCR/MOC against a specific hardware part number + suffix, with a
@@ -873,26 +884,31 @@ COMPONENTS.forEach(c => {
   // Offsets are clamped so an introduced-date never lands after TODAY.
   const maxOffset = daysSinceLaunch - 30;
   const complianceRoll = () => pick(['Approved compliant', 'Approved compliant', 'Approved compliant', 'Compliance underway', 'Approved derivative of']);
-  c.suffixHistory.push(makeSuffixRow({ suffix: 'AA', dateIntroduced: isoDate(launch), complianceStatus: 'Approved compliant', note: 'Original release.' }));
-  let currentSuffix = 'AA';
+  c.suffixHistory.push(makeSuffixRow({ suffix: 'AA', dateIntroduced: isoDate(launch), complianceStatus: 'Approved compliant', note: 'Original release.', current: true }));
+  let currentCodes = ['AA'];
   const shape = rand();
   if (shape < 0.15) {
-    // simple sequential revision
+    // simple sequential revision — the new suffix supersedes the old one as the current part
     const status = complianceRoll();
     c.suffixHistory.push(makeSuffixRow({
       suffix: 'AB', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(200, Math.min(1400, maxOffset)))),
       complianceStatus: status, approvedDerivativeOfSuffix: status === 'Approved derivative of' ? 'AA' : '',
       note: pick(['Supplier process change.', 'Minor design update.', 'Component re-sourced, form/fit/function unchanged.']),
+      current: true,
     }));
-    currentSuffix = 'AB';
+    c.suffixHistory[0].current = false;
+    currentCodes = ['AB'];
   } else if (shape < 0.30) {
-    // branching — market-specific derivatives, both off the same parent suffix
+    // branching — market-specific derivatives that both have to stay in production together for
+    // global manufacturing (e.g. an EU part and a China part), so both are current at once, not
+    // just whichever one happened to be picked.
     const status1 = complianceRoll(); const status2 = complianceRoll();
-    c.suffixHistory.push(makeSuffixRow({ suffix: 'AB', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(200, Math.min(1000, maxOffset)))), complianceStatus: status1, approvedDerivativeOfSuffix: status1 === 'Approved derivative of' ? 'AA' : '', note: 'EU-market unique derivative.' }));
-    c.suffixHistory.push(makeSuffixRow({ suffix: 'AC', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(220, Math.min(1100, maxOffset)))), complianceStatus: status2, approvedDerivativeOfSuffix: status2 === 'Approved derivative of' ? 'AA' : '', note: 'China-market unique variant.' }));
-    currentSuffix = pick(['AB', 'AC']);
+    c.suffixHistory.push(makeSuffixRow({ suffix: 'AB', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(200, Math.min(1000, maxOffset)))), complianceStatus: status1, approvedDerivativeOfSuffix: status1 === 'Approved derivative of' ? 'AA' : '', note: 'EU-market unique derivative.', current: true }));
+    c.suffixHistory.push(makeSuffixRow({ suffix: 'AC', derivedFrom: 'AA', dateIntroduced: isoDate(addDays(launch, randInt(220, Math.min(1100, maxOffset)))), complianceStatus: status2, approvedDerivativeOfSuffix: status2 === 'Approved derivative of' ? 'AA' : '', note: 'China-market unique variant.', current: true }));
+    c.suffixHistory[0].current = false;
+    currentCodes = ['AB', 'AC'];
   }
-  c.partNumber.suffix = currentSuffix;
+  c.partNumber.suffix = currentCodes[0];
 
   // ---- Linked parts (e.g. a headlamp housing an HCM plugged into LEDs/drivers from other suppliers) ----
   if (rand() < 0.22) {
@@ -1075,6 +1091,89 @@ COMPONENTS.forEach(c => {
   });
 });
 
+/* ============================================================
+   LOCAL PERSISTENCE — makes this a "sticky" demo instead of a fresh random
+   world every load, and lets the dashboard tab and any component-ticket tabs
+   (opened via window.open, below) share one browser-local dataset instead of
+   each holding an isolated snapshot.
+   Same-origin tabs already share one localStorage, and a tab that WRITES to
+   it causes the browser to fire a 'storage' event in every OTHER open tab on
+   that origin (never the writing tab itself) — that's what keeps a second
+   tab's view in sync without a real backend. This is still demo-only: it's
+   saved per-browser (clearing site data / a different browser starts fresh),
+   and hosting the file on GitHub Pages doesn't add a shared database — each
+   visitor gets their own browser-local copy.
+   ============================================================ */
+const ECAS_STORAGE_KEY = 'ecas-poc-store-v1';
+function snapshotStore() {
+  return {
+    programme: PROGRAMME, components: COMPONENTS, records: RECORDS,
+    counters: { brandCounter, vlxCounter, vlCounter, compCounter, taskCounter },
+    savedAt: new Date().toISOString(),
+  };
+}
+function writeStore(snap) {
+  try { localStorage.setItem(ECAS_STORAGE_KEY, JSON.stringify(snap)); }
+  catch (err) { console.warn('ECAS: could not save demo data to this browser.', err); }
+}
+function loadStoredSnapshot() {
+  try {
+    const raw = localStorage.getItem(ECAS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) { console.warn('ECAS: could not read saved demo data from this browser.', err); return null; }
+}
+// Replace the freshly-generated mock world above with whatever this browser already had saved —
+// COMPONENTS/RECORDS/PROGRAMME are declared with let/const-array-in-place, so we mutate them in
+// place (or, for PROGRAMME, reassign the `let`) rather than pointing other closures at new arrays.
+function applySnapshot(snap) {
+  if (!snap) return;
+  if (snap.programme) PROGRAMME = snap.programme;
+  rebuildVehicleLines();
+  COMPONENTS.length = 0; (snap.components || []).forEach(c => COMPONENTS.push(c));
+  RECORDS.length = 0; (snap.records || []).forEach(r => RECORDS.push(r));
+  const cn = snap.counters || {};
+  if (cn.brandCounter) brandCounter = cn.brandCounter;
+  if (cn.vlxCounter) vlxCounter = cn.vlxCounter;
+  if (cn.vlCounter) vlCounter = cn.vlCounter;
+  if (cn.compCounter) compCounter = cn.compCounter;
+  if (cn.taskCounter) taskCounter = cn.taskCounter;
+}
+// Main-tab save: this tab is the hub that applies every incoming 'storage' update, so its own
+// in-memory world is trusted as the latest — write it out in full, debounced so a burst of edits
+// (typing, several pill-clicks) collapses into one write.
+let suppressPersist = false; // true only while this tab is applying an update that came FROM storage
+let resettingDemoData = false; // true only while "Reset demo data" is unwinding this tab, so the
+                                // beforeunload/interval autosaves below don't re-write over the clear
+let mainSaveTimer = null;
+function persistStore() {
+  if (suppressPersist || resettingDemoData) return;
+  clearTimeout(mainSaveTimer);
+  mainSaveTimer = setTimeout(() => writeStore(snapshotStore()), 150);
+}
+// Ticket-tab save: this tab only ever holds one component (plus its records) that it knows is
+// current — everything else in its in-memory world could be stale versus what other tabs have
+// since saved. So instead of overwriting the whole store, read the latest, splice in just this
+// component + its records, and write that back — safe to run alongside other open tabs/tickets.
+let ticketSaveTimer = null;
+function writeTicketChangeNow(c, recordsList) {
+  const latest = loadStoredSnapshot() || snapshotStore();
+  const ci = latest.components.findIndex(x => x.id === c.id);
+  if (ci >= 0) latest.components[ci] = c; else latest.components.push(c);
+  (recordsList || []).forEach(r => {
+    const ri = latest.records.findIndex(x => x.componentId === r.componentId && x.vehicleLineId === r.vehicleLineId);
+    if (ri >= 0) latest.records[ri] = r; else latest.records.push(r);
+  });
+  latest.savedAt = new Date().toISOString();
+  writeStore(latest);
+}
+function persistTicketChange(c, recordsList) {
+  clearTimeout(ticketSaveTimer);
+  ticketSaveTimer = setTimeout(() => writeTicketChangeNow(c, recordsList), 150);
+}
+const ecasExistingSnapshot = loadStoredSnapshot();
+if (ecasExistingSnapshot) { applySnapshot(ecasExistingSnapshot); }
+else { writeStore(snapshotStore()); } // first run in this browser — save the generated mock world as the seed
+
 function getRecord(componentId, vehicleLineId) {
   let r = RECORDS.find(r => r.componentId === componentId && r.vehicleLineId === vehicleLineId);
   if (!r) { r = makeBlankRecord(componentId, vehicleLineId); RECORDS.push(r); }
@@ -1143,15 +1242,35 @@ function statTile(label, value, foot, tone) {
    "derivedFrom" parent pointer so both a simple sequential chain and a
    branching one (two suffixes off the same parent) use the same shape.
    ============================================================ */
-function currentSuffixRecord(c) {
-  return (c.suffixHistory || []).find(s => s.suffix === c.partNumber.suffix) || (c.suffixHistory || [])[c.suffixHistory.length - 1];
+// All suffix-history rows currently in production for this component — usually one, but more than
+// one where separate regional/market derivatives (EU/China/US, say) all have to stay live together.
+// Falls back to the most recent row for older/seeded data that predates the "current" flag, so
+// nothing ends up with zero current suffixes.
+function currentSuffixRows(c) {
+  const rows = (c.suffixHistory || []).filter(s => s.current);
+  if (rows.length) return rows;
+  const hist = c.suffixHistory || [];
+  return hist.length ? [hist[hist.length - 1]] : [];
+}
+function currentSuffixCodes(c) { return currentSuffixRows(c).map(s => s.suffix); }
+// Part number as displayed — joins every current suffix (e.g. "LR73-482910-AB/AC") rather than
+// assuming there's only ever one.
+function partNumberDisplay(c) {
+  const codes = currentSuffixCodes(c);
+  return `${c.partNumber.prefix}-${c.partNumber.base}-${codes.join('/') || c.partNumber.suffix}`;
 }
 function overallComplianceInfo(c) {
-  const cur = currentSuffixRecord(c);
-  if (!cur) return { label: 'Compliance underway', tone: 'warning' };
-  if (cur.complianceStatus === 'Approved compliant') return { label: 'Approved compliant', tone: 'good' };
+  const rows = currentSuffixRows(c);
+  if (!rows.length) return { label: 'Compliance underway', tone: 'warning' };
+  const approved = s => s.complianceStatus === 'Approved compliant' || s.complianceStatus === 'Approved derivative of';
+  const notApproved = rows.filter(s => !approved(s));
+  if (notApproved.length) {
+    return { label: rows.length > 1 ? `Compliance underway (${notApproved.length} of ${rows.length} current suffixes)` : 'Compliance underway', tone: 'warning' };
+  }
+  if (rows.length > 1) return { label: `Approved compliant (${rows.map(s => s.suffix).join(', ')})`, tone: 'good' };
+  const cur = rows[0];
   if (cur.complianceStatus === 'Approved derivative of') return { label: `Approved — same as ${cur.approvedDerivativeOfSuffix || '—'}`, tone: 'good' };
-  return { label: 'Compliance underway', tone: 'warning' };
+  return { label: 'Approved compliant', tone: 'good' };
 }
 
 /* ============================================================
@@ -1170,6 +1289,17 @@ function allValidRecords() {
   return RECORDS.filter(r => { const c = COMPONENTS.find(x => x.id === r.componentId); return c && c.vehicleLineIds.includes(r.vehicleLineId); });
 }
 function isOutstanding(area, sub) { return !APPROVED_TRIGGER[area](sub); }
+// All engineer names actually in use — the seeded ENGINEERS list plus any custom name someone has
+// typed as a component owner or area reviewer (the "New component" modal and the free-text engineer
+// fields take any name). Every "pick an engineer" dropdown (Next Action, the ECAS "by engineer" view,
+// the GRADE/EMC/FUSA/Cyber engineer fields) reads from this instead of the fixed list, so a newly
+// typed name is selectable everywhere right away rather than only existing where it was first typed.
+function allEngineerNames() {
+  const names = new Set(ENGINEERS);
+  COMPONENTS.forEach(c => { if (c.engineer) names.add(c.engineer); });
+  RECORDS.forEach(r => { ['grade', 'emc', 'fusa', 'cyber'].forEach(area => { if (r[area] && r[area].engineer) names.add(r[area].engineer); }); });
+  return [...names].sort();
+}
 function liveVehicleLines() { return VEHICLE_LINES.filter(v => v.phase !== 'signed-off'); }
 function vehicleLineDefOptions() {
   const map = new Map();
@@ -1179,6 +1309,7 @@ function vehicleLineDefOptions() {
 function topicStatusFor(topic, rec) { return topic === 'emc' ? emcOverallStatus(rec.emc) : rec[topic].status; }
 
 function renderDashboard() {
+  persistStore();
   document.querySelectorAll('#ecasModeRow .ecas-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === dashMode));
   renderEcasSelectors();
   renderEcasSummary();
@@ -1187,7 +1318,9 @@ function renderDashboard() {
 function renderEcasSelectors() {
   const wrap = document.getElementById('ecasSelectors');
   if (dashMode === 'engineer') {
-    wrap.innerHTML = `<select id="ecasEngineerSel">${selectOpts(ENGINEERS, dashEngineer)}</select>`;
+    const engineerNames = allEngineerNames();
+    if (!engineerNames.includes(dashEngineer)) dashEngineer = engineerNames[0];
+    wrap.innerHTML = `<select id="ecasEngineerSel">${selectOpts(engineerNames, dashEngineer)}</select>`;
     document.getElementById('ecasEngineerSel').addEventListener('change', e => { dashEngineer = e.target.value; renderEcasSummary(); });
   } else if (dashMode === 'vehicle') {
     const defs = vehicleLineDefOptions();
@@ -1244,7 +1377,7 @@ function ecasEngineerHtml(eng) {
     const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ') || '—';
     const firstVl = c.vehicleLineIds[0] || '';
     return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td class="cell-sub">${esc(lines)}</td>
       <td>${badge(s.worstGrade, GRADE_TONE[s.worstGrade])}</td>
       <td>${badge(s.worstEmc, EMC_TONE[s.worstEmc])}</td>
@@ -1262,7 +1395,7 @@ function ecasEngineerHtml(eng) {
       const tone = area === 'emc' ? EMC_TONE[statusLabel] : GRADE_TONE[sub.status];
       const outstanding = isOutstanding(area, sub);
       return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
-        <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+        <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
         <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
         <td>${AREA_LABELS[area]}</td>
         <td>${badge(statusLabel, tone)}</td>
@@ -1297,7 +1430,7 @@ function ecasVehicleHtml(vlId) {
     const r = recs.find(x => x.componentId === c.id);
     if (!r) return '';
     return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td class="cell-sub">${esc(c.supplier)}</td>
       <td>${badge(r.grade.status, GRADE_TONE[r.grade.status])}</td>
       <td>${badge(emcOverallStatus(r.emc), EMC_TONE[emcOverallStatus(r.emc)])}</td>
@@ -1357,7 +1490,7 @@ function ecasLiveComponentsHtml() {
     const lines = c.vehicleLineIds.filter(id => liveIds.has(id)).map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ');
     const firstVl = c.vehicleLineIds.find(id => liveIds.has(id)) || '';
     return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td class="cell-sub">${esc(lines)}</td>
       <td>${out.grade || '—'}</td><td>${out.emc || '—'}</td><td>${out.fusa || '—'}</td><td>${out.cyber || '—'}</td>
       <td><strong>${total}</strong></td>
@@ -1451,7 +1584,7 @@ function ecasTopicHtml(topic) {
     if (!c || !vl) return '';
     const status = topicStatusFor(topic, r);
     return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
       <td>${badge(status, meta.tone[status])}</td>
       <td>${esc(r[topic].engineer || '—')}</td>
@@ -1485,9 +1618,12 @@ function ecasTopicHtml(topic) {
 let naUser = ENGINEERS[0];
 function populateNaUserSelect() {
   const sel = document.getElementById('naUserSel');
-  if (!sel.options.length) sel.innerHTML = selectOpts(ENGINEERS, naUser);
+  const engineerNames = allEngineerNames();
+  if (!engineerNames.includes(naUser)) naUser = engineerNames[0];
+  sel.innerHTML = selectOpts(engineerNames, naUser);
 }
 function renderNextAction() {
+  persistStore();
   populateNaUserSelect();
   document.getElementById('naUserSel').value = naUser;
   document.getElementById('naWrap').innerHTML = naSummaryHtml(naUser);
@@ -1545,7 +1681,7 @@ function naSummaryHtml(user) {
     const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? `${v.nameplate} ${v.my}` : null; }).filter(Boolean).join(', ') || '—';
     const firstVl = c.vehicleLineIds[0] || '';
     return `<tr data-open-comp="${c.id}" data-open-vline="${firstVl}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td class="cell-sub">${esc(lines)}</td>
       <td>${badge(s.worstGrade, GRADE_TONE[s.worstGrade])}</td>
       <td>${badge(s.worstEmc, EMC_TONE[s.worstEmc])}</td>
@@ -1564,7 +1700,7 @@ function naSummaryHtml(user) {
       const statusLabel = area === 'emc' ? emcOverallStatus(sub) : sub.status;
       const tone = area === 'emc' ? EMC_TONE[statusLabel] : GRADE_TONE[sub.status];
       return `<tr data-open-comp="${c.id}" data-open-vline="${vl.id}">
-        <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+        <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
         <td class="cell-sub">${esc(vl.nameplate)} ${esc(vl.my)}</td>
         <td>${AREA_LABELS[area]}</td>
         <td>${badge(statusLabel, tone)}</td>
@@ -1596,6 +1732,7 @@ function naSummaryHtml(user) {
    PROGRAMME VIEW
    ============================================================ */
 function renderProgramme() {
+  persistStore();
   const wrap = document.getElementById('programmeWrap');
   wrap.innerHTML = PROGRAMME.brands.map(b => renderBrandCard(b)).join('');
   wrap.querySelectorAll('[data-add-vline]').forEach(btn => btn.addEventListener('click', () => addVehicleLineToBrand(btn.dataset.addVline)));
@@ -1849,6 +1986,7 @@ function gateStep(label, date, state) {
   return `<div class="gate-step ${state}"><div class="gline"></div><div class="gate-dot">${state === 'done' ? '✓' : ''}</div><div class="gate-label">${label}</div><div class="gate-date">${fmtDate(date)}</div></div>`;
 }
 function renderVehicleDetail() {
+  persistStore();
   const vl = VEHICLE_LINES.find(v => v.id === selectedVlineId);
   if (!vl) { document.getElementById('vlineDetail').innerHTML = '<div class="empty-state">Select a vehicle line, or add one from the Programme tab.</div>'; return; }
   const recs = recordsForVehicleLine(vl.id);
@@ -1861,7 +1999,7 @@ function renderVehicleDetail() {
   const rows = recs.map(r => {
     const c = COMPONENTS.find(x => x.id === r.componentId);
     return `<tr data-comp="${c.id}" data-vline="${vl.id}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td>${esc(c.supplier)}</td>
       <td>${esc(c.engineer)}</td>
       <td>${badge(r.grade.status, GRADE_TONE[r.grade.status])}</td>
@@ -1963,6 +2101,7 @@ function renderComplianceList() {
 }
 function refreshComplianceDetail() { renderComplianceList(); renderComplianceDetail(); }
 function renderComplianceDetail() {
+  persistStore();
   const vl = VEHICLE_LINES.find(v => v.id === selectedVlineId);
   if (!vl) { document.getElementById('vcDetail').innerHTML = '<div class="empty-state">Select a vehicle line, or add one from the Programme tab.</div>'; return; }
   const vc = getVehicleCompliance(vl.id);
@@ -2114,6 +2253,7 @@ function populateComponentFilters() {
   const cSel = document.getElementById('filterCyber'); CYBER_STAGES.forEach(s => cSel.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
 }
 function renderComponentTable() {
+  persistStore();
   populateVlineFilterSelect();
   populateProgrammeFilterSelect();
   const q = document.getElementById('compSearch').value.trim().toLowerCase();
@@ -2134,7 +2274,7 @@ function renderComponentTable() {
     if (fFusa && s.worstFusa !== fFusa) return false;
     if (fCyber && s.worstCyber !== fCyber) return false;
     if (q) {
-      const hay = `${c.name} ${c.partNumber.prefix}${c.partNumber.base}${c.partNumber.suffix} ${c.supplier} ${c.engineer}`.toLowerCase();
+      const hay = `${c.name} ${c.partNumber.prefix}${c.partNumber.base}${currentSuffixCodes(c).join('')} ${c.supplier} ${c.engineer}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -2146,7 +2286,7 @@ function renderComponentTable() {
     const s = componentSummary(c);
     const lines = c.vehicleLineIds.map(id => { const v = VEHICLE_LINES.find(x => x.id === id); return v ? v.nameplate + ' ' + v.my : null; }).filter(Boolean).join(', ') || '—';
     return `<tr data-comp="${c.id}">
-      <td>${esc(c.name)}<div class="cell-sub mono">${c.partNumber.prefix}-${c.partNumber.base}-${c.partNumber.suffix}</div></td>
+      <td>${esc(c.name)}<div class="cell-sub mono">${partNumberDisplay(c)}</div></td>
       <td>${esc(c.supplier)}</td>
       <td>${esc(c.engineer)}</td>
       <td class="cell-sub vlines-cell" title="${esc(lines)}">${esc(lines)}</td>
@@ -2226,7 +2366,7 @@ function openNewComponentModal() {
       dtNumber: document.getElementById('ncDt').value.trim() || '—',
       vehicleLineIds: [...selectedVl], rrPlans: [], deviations: [],
       overview: { launchDate: isoDate(TODAY), historyNotes: 'New component — no history recorded yet.', linkedParts: [] },
-      suffixHistory: [makeSuffixRow({ suffix: partNumber.suffix, dateIntroduced: isoDate(TODAY), complianceStatus: 'Compliance underway', note: 'Newly added component.' })],
+      suffixHistory: [makeSuffixRow({ suffix: partNumber.suffix, dateIntroduced: isoDate(TODAY), complianceStatus: 'Compliance underway', note: 'Newly added component.', current: true })],
       prerequisites: [
         { label: 'Current draw', value: '' },
         { label: 'Quiescent current (QI)', value: '' },
@@ -2249,14 +2389,12 @@ function openNewComponentModal() {
 function openComponentTicket(componentId, vehicleLineId) {
   const c = COMPONENTS.find(x => x.id === componentId);
   if (!c) return;
-  const vlIds = c.vehicleLineIds;
-  if (!vlIds.length) { alert('This component isn\'t assigned to any vehicle line yet — assign it to one first.'); return; }
-  const vlList = vlIds.map(id => VEHICLE_LINES.find(v => v.id === id)).filter(Boolean);
-  const records = vlIds.map(id => getRecord(componentId, id));
-  const payload = { component: c, vehicleLines: vlList, records, initialVline: (vehicleLineId && vlIds.includes(vehicleLineId)) ? vehicleLineId : vlIds[0] };
-  const json = JSON.stringify(payload);
-  const b64 = btoa(unescape(encodeURIComponent(json)));
-  window.open(location.pathname + '#ticket=' + b64, '_blank');
+  if (!c.vehicleLineIds.length) { alert('This component isn\'t assigned to any vehicle line yet — assign it to one first.'); return; }
+  // Flush this tab's current state before opening the ticket tab, so it reads this component
+  // (and everything else) as of right now rather than whatever was last auto-saved.
+  writeStore(snapshotStore());
+  const hash = '#ticket=' + encodeURIComponent(componentId) + (vehicleLineId ? ',' + encodeURIComponent(vehicleLineId) : '');
+  window.open(location.pathname + hash, '_blank');
 }
 
 function initTicketPage(payload) {
@@ -2264,15 +2402,15 @@ function initTicketPage(payload) {
   document.body.innerHTML = `
     <div id="app">
       <header class="topbar">
-        <div class="brand"><div class="brand-title">ECAS</div><div class="brand-sub">Component ticket — snapshot passed via link</div></div>
+        <div class="brand"><div class="brand-title">ECAS</div><div class="brand-sub">Component ticket</div></div>
         <div class="topbar-right" style="margin-left:auto;">
-          <span class="demo-pill">Ticket view</span>
+          <span class="demo-pill" title="Saved to this browser — the dashboard tab and other ticket tabs see changes made here.">Demo data · saved in this browser</span>
           <button class="theme-toggle" id="exportTicketBtn">Export ticket (JSON)</button>
           <button class="theme-toggle" id="themeToggle">◐ Theme</button>
         </div>
       </header>
       <main id="ticketMain" style="max-width:980px;"></main>
-      <footer>Proof of concept — this ticket is a snapshot passed via the link; it isn't wired to a live backend yet, so edits here stay in this browser tab.</footer>
+      <footer>Proof of concept — changes made here are saved to this browser's demo data, the same as the dashboard tab; a different browser (or "Reset demo data" on the dashboard) won't see them.</footer>
     </div>
   `;
   document.getElementById('themeToggle').addEventListener('click', () => {
@@ -2287,16 +2425,23 @@ function initTicketPage(payload) {
   let currentVl = payload.initialVline;
   let activeTab = 'overview';
   const records = {}; payload.records.forEach(r => records[r.vehicleLineId] = r);
+  // "Show tests for this change" filters on the GRADE/EMC tabs — default to whichever suffix is
+  // currently flagged as a change in progress, so opening the ticket mid-SCR shows the relevant subset.
+  const inProgressSuffix = c.suffixHistory.find(s => s.changeInProgress);
+  let gradeTestFilter = (inProgressSuffix && inProgressSuffix.gradeTestsRequired.length) ? inProgressSuffix.suffix : 'all';
+  let emcTestFilter = (inProgressSuffix && inProgressSuffix.emcTestsRequired.length) ? inProgressSuffix.suffix : 'all';
+  let justAddedSuffix = null;
 
   function render() {
+    persistTicketChange(c, Object.values(records));
     const vl = payload.vehicleLines.find(v => v.id === currentVl);
     const rec = records[currentVl];
     const vlinePills = payload.vehicleLines.map(v => `<div class="vline-pill ${v.id === currentVl ? 'active' : ''}" data-vl="${v.id}">${esc(v.nameplate)} ${v.my}</div>`).join('');
     document.getElementById('ticketMain').innerHTML = `
-      <div class="ticket-notice">Snapshot ticket for <strong>${esc(c.name)}</strong>, opened ${new Date().toLocaleString('en-GB')}. Changes made here stay in this browser tab, the same as this tool's other proof-of-concept pages — there's no backend yet to sync them back.</div>
+      <div class="ticket-notice">Ticket for <strong>${esc(c.name)}</strong>, opened ${new Date().toLocaleString('en-GB')}. Changes save to this browser's shared demo data — the dashboard tab picks them up automatically.</div>
       <div class="card">
         <div class="card-head">
-          <div><div class="card-title" style="font-size:16px;">${esc(c.name)}</div><div class="card-sub mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}-${esc(c.partNumber.suffix)} · ${esc(c.dtNumber)}</div></div>
+          <div><div class="card-title" style="font-size:16px;">${esc(c.name)}</div><div class="card-sub mono">${esc(partNumberDisplay(c))} · ${esc(c.dtNumber)}</div></div>
         </div>
         <div class="vline-pill-row">${vlinePills}</div>
         <div class="detail-header">
@@ -2339,6 +2484,7 @@ function initTicketPage(payload) {
   }
 
   function renderTabBody(rec, vl) {
+    persistTicketChange(c, Object.values(records));
     const wrap = document.getElementById('ticketTabBody');
     if (activeTab === 'overview') { wrap.innerHTML = overviewTabHtml(c); wireOverviewInputs(); return; }
     if (activeTab === 'prereq') { wrap.innerHTML = prereqTabHtml(c); wirePrereqInputs(); return; }
@@ -2366,10 +2512,10 @@ function initTicketPage(payload) {
         <div class="rr-row-head">
           <div style="display:flex; gap:8px; align-items:center;">
             <strong class="mono">Suffix ${esc(s.suffix)}</strong>
+            ${s.current ? badge('Current', 'progress') : ''}
             ${s.changeInProgress ? badge('Change in progress', 'warning') : ''}
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
-            ${s.suffix === c.partNumber.suffix ? badge('Current', 'progress') : `<button class="link-btn" data-set-current="${i}">Set as current</button>`}
             ${c.suffixHistory.length > 1 ? `<button class="icon-btn" data-suffix-rm="${i}">✕</button>` : ''}
           </div>
         </div>
@@ -2386,9 +2532,13 @@ function initTicketPage(payload) {
         <div class="field-inline" style="margin-top:8px;"><label>Note</label><input type="text" data-suffix="${i}.note" value="${esc(s.note || '')}" /></div>
         <div class="modal-grid2" style="margin-top:8px;">
           <div class="field-inline"><label>SCR / MOC reference</label><input type="text" data-suffix="${i}.scrRef" value="${esc(s.scrRef || '')}" placeholder="e.g. SCR-12345" /></div>
-          <div class="field-inline"><label>Testing required (for this suffix)</label><input type="text" data-suffix="${i}.testingRequired" value="${esc(s.testingRequired || '')}" /></div>
+          <div class="field-inline"><label>Other testing / notes</label><input type="text" data-suffix="${i}.testingRequired" value="${esc(s.testingRequired || '')}" placeholder="anything not covered by the checklists below" /></div>
         </div>
-        <label class="toggle-chip" style="margin-top:6px;"><input type="checkbox" data-suffix-check="${i}.changeInProgress" ${s.changeInProgress ? 'checked' : ''} /> Change in progress against this suffix (SCR raised)</label>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:6px;">
+          <label class="toggle-chip ${s.current ? 'on' : ''}"><input type="checkbox" data-suffix-check="${i}.current" ${s.current ? 'checked' : ''} /> Current — in production (a component can have more than one, e.g. separate EU/China/US parts)</label>
+          <label class="toggle-chip ${s.changeInProgress ? 'on' : ''}"><input type="checkbox" data-suffix-check="${i}.changeInProgress" ${s.changeInProgress ? 'checked' : ''} /> Change in progress against this suffix (SCR raised)</label>
+        </div>
+        ${testScopeHtml(i, s)}
       </div>`;
     }).join('');
 
@@ -2409,7 +2559,7 @@ function initTicketPage(payload) {
     return `
       <div class="detail-header" style="margin-bottom:16px;">
         <div><div class="kv-label">Product identity (prefix + base)</div><div class="kv-value mono">${esc(c.partNumber.prefix)}-${esc(c.partNumber.base)}</div></div>
-        <div><div class="kv-label">Current suffix</div><div class="kv-value mono">${esc(c.partNumber.suffix)}</div></div>
+        <div><div class="kv-label">Current suffix${currentSuffixCodes(c).length > 1 ? 'es' : ''}</div><div class="kv-value mono">${esc(currentSuffixCodes(c).join(', ') || c.partNumber.suffix)}</div></div>
         <div><div class="kv-label">Compliance status</div><div class="kv-value">${badge(compliance.label, compliance.tone)}</div></div>
         <div><div class="kv-label">Launched</div><div class="kv-value">${c.overview.launchDate ? fmtDate(new Date(c.overview.launchDate)) : '—'}</div></div>
       </div>
@@ -2422,6 +2572,25 @@ function initTicketPage(payload) {
 
       <div class="card-head" style="margin-top:18px;"><div><div class="card-title">Linked parts</div><div class="card-sub">Other hardware linked to/inside this component</div></div><button class="theme-toggle" id="addLinked">+ Add linked part</button></div>
       ${linkedRows}
+    `;
+  }
+  // Manual test-scope picker for a suffix/change: tick which of the full GRADE checklist / EMC sub-test
+  // list this specific SCR actually needs re-tested. Feeds the "show tests for this change" filter on
+  // the GRADE and EMC tabs — no auto-suggestion, the engineer decides every time.
+  function testScopeHtml(suffixIdx, s) {
+    const gradeSel = new Set(s.gradeTestsRequired || []);
+    const emcSel = new Set(s.emcTestsRequired || []);
+    const gradePills = GRADE_CHECKLIST.map(([code, name]) => `<div class="pill-check ${gradeSel.has(code) ? 'active' : ''}" data-scope="${suffixIdx}.grade.${code}" title="${esc(name)}">${code}</div>`).join('');
+    const emcPills = EMC_SUBTESTS.map(([code, name]) => `<div class="pill-check ${emcSel.has(code) ? 'active' : ''}" data-scope="${suffixIdx}.emc.${code}" title="${esc(name)}">${code}</div>`).join('');
+    const summary = `${gradeSel.size} of ${GRADE_CHECKLIST.length} GRADE tests, ${emcSel.size} of ${EMC_SUBTESTS.length} EMC tests selected`;
+    return `
+      <details class="test-scope" style="margin-top:10px;" ${s.suffix === justAddedSuffix ? 'open' : ''}>
+        <summary>Testing required for this change — ${esc(summary)}</summary>
+        <div class="kv-label" style="margin-top:10px;">GRADE tests needed</div>
+        <div class="pill-row">${gradePills}</div>
+        <div class="kv-label" style="margin-top:10px;">EMC tests needed</div>
+        <div class="pill-row">${emcPills}</div>
+      </details>
     `;
   }
   function wireOverviewInputs() {
@@ -2438,28 +2607,51 @@ function initTicketPage(payload) {
     });
     document.querySelectorAll('[data-suffix-check]').forEach(el => {
       const [idx, key] = el.dataset.suffixCheck.split('.');
-      el.addEventListener('change', () => { c.suffixHistory[Number(idx)][key] = el.checked; render(); });
+      el.addEventListener('change', () => {
+        if (key === 'current' && !el.checked && !c.suffixHistory.some((s, i) => i !== Number(idx) && s.current)) {
+          alert('At least one suffix has to stay marked as current.');
+          el.checked = true;
+          return;
+        }
+        c.suffixHistory[Number(idx)][key] = el.checked;
+        render();
+      });
     });
-    document.querySelectorAll('[data-set-current]').forEach(el => el.addEventListener('click', () => {
-      c.partNumber.suffix = c.suffixHistory[Number(el.dataset.setCurrent)].suffix;
-      render();
-    }));
+    document.querySelectorAll('[data-scope]').forEach(el => {
+      el.addEventListener('click', () => {
+        const [idx, area, code] = el.dataset.scope.split('.');
+        const key = area === 'grade' ? 'gradeTestsRequired' : 'emcTestsRequired';
+        const row = c.suffixHistory[Number(idx)];
+        const set = new Set(row[key] || []);
+        if (set.has(code)) set.delete(code); else set.add(code);
+        row[key] = [...set];
+        render();
+      });
+    });
     document.querySelectorAll('[data-suffix-rm]').forEach(el => el.addEventListener('click', () => {
       const idx = Number(el.dataset.suffixRm);
       const removed = c.suffixHistory[idx];
       c.suffixHistory.splice(idx, 1);
-      if (c.partNumber.suffix === removed.suffix) c.partNumber.suffix = c.suffixHistory[c.suffixHistory.length - 1].suffix;
+      // Removing the last current suffix would leave none — fall back to the most recent remaining one.
+      if (removed.current && !c.suffixHistory.some(s => s.current) && c.suffixHistory.length) {
+        c.suffixHistory[c.suffixHistory.length - 1].current = true;
+      }
       render();
     }));
     const addSuffixBtn = document.getElementById('addSuffix');
     if (addSuffixBtn) addSuffixBtn.addEventListener('click', () => {
-      // A new suffix revision normally arrives via an SCR against the currently-live suffix: flag that row as
-      // "changing" and append the incoming suffix's row for its required testing + compliance to be logged against.
-      const cur = currentSuffixRecord(c);
+      // A new suffix revision normally arrives via an SCR against one of the currently-live suffixes: flag
+      // that row as "changing" and append the incoming suffix's row for its required testing + compliance
+      // to be logged against. With more than one current suffix (e.g. EU/China/US parts), this defaults to
+      // the first one — the "Derived from" and "Change in progress" fields on each row can be adjusted
+      // manually if the change is actually against a different current suffix.
+      const cur = currentSuffixRows(c)[0];
       if (cur) cur.changeInProgress = true;
+      const newSuffix = nextSuffixCode(c.suffixHistory.map(s => s.suffix));
       c.suffixHistory.push(makeSuffixRow({
-        suffix: nextSuffixCode(c.suffixHistory.map(s => s.suffix)), derivedFrom: cur ? cur.suffix : null, dateIntroduced: isoDate(TODAY),
+        suffix: newSuffix, derivedFrom: cur ? cur.suffix : null, dateIntroduced: isoDate(TODAY),
       }));
+      justAddedSuffix = newSuffix; // auto-expand its "testing required" picker so it isn't missed
       render();
     });
     document.querySelectorAll('[data-linked]').forEach(el => {
@@ -2552,7 +2744,7 @@ function initTicketPage(payload) {
     });
     document.querySelectorAll('[data-change-rm]').forEach(el => el.addEventListener('click', () => { c.changeLog.splice(Number(el.dataset.changeRm), 1); render(); }));
     const addBtn = document.getElementById('addChange');
-    if (addBtn) addBtn.addEventListener('click', () => { c.changeLog.push(makeChangeEntry({ partNumberSuffix: c.partNumber.suffix })); render(); });
+    if (addBtn) addBtn.addEventListener('click', () => { c.changeLog.push(makeChangeEntry({ partNumberSuffix: currentSuffixCodes(c)[0] || c.partNumber.suffix })); render(); });
   }
   function hardwareTabHtml(c) {
     const hc = c.hardwareCompliance;
@@ -2704,14 +2896,29 @@ function initTicketPage(payload) {
       });
     });
   }
+  // Filter control shown above a checklist/results tile once at least one suffix has a manually-ticked
+  // test scope — lets the tab narrow down to just the tests a specific change (SCR) actually needs.
+  function testFilterControlHtml(area, currentFilter) {
+    const key = area === 'grade' ? 'gradeTestsRequired' : 'emcTestsRequired';
+    const total = area === 'grade' ? GRADE_CHECKLIST.length : EMC_SUBTESTS.length;
+    const scoped = c.suffixHistory.filter(s => (s[key] || []).length);
+    if (!scoped.length) return '';
+    const opts = [`<option value="all" ${currentFilter === 'all' ? 'selected' : ''}>All ${total} tests</option>`]
+      .concat(scoped.map(s => `<option value="${esc(s.suffix)}" ${currentFilter === s.suffix ? 'selected' : ''}>Suffix ${esc(s.suffix)}${s.scrRef ? ' — ' + esc(s.scrRef) : ''} (${s[key].length} tests)</option>`));
+    return `<div class="field-inline" style="max-width:360px; margin-bottom:10px;"><label>Show</label><select id="${area}TestFilterSel">${opts.join('')}</select></div>`;
+  }
   function gradeTabHtml(rec) {
-    const checkRows = rec.grade.checklist.map((item, i) => `
-      <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${item.code}</span><span class="subtest-name">${esc(item.name)}</span></div>
-      <select data-gradecheck="${i}">${selectOpts(GRADE_CHECK_RESULTS, item.result)}</select></div>
-    `).join('');
+    const gradeFilterControl = testFilterControlHtml('grade', gradeTestFilter);
+    const activeGradeSuffix = gradeTestFilter !== 'all' ? c.suffixHistory.find(s => s.suffix === gradeTestFilter) : null;
+    const visibleGradeChecklist = activeGradeSuffix ? rec.grade.checklist.filter(item => activeGradeSuffix.gradeTestsRequired.includes(item.code)) : rec.grade.checklist;
+    const checkRows = visibleGradeChecklist.map(item => {
+      const i = rec.grade.checklist.indexOf(item);
+      return `<div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${item.code}</span><span class="subtest-name">${esc(item.name)}</span></div>
+      <select data-gradecheck="${i}">${selectOpts(GRADE_CHECK_RESULTS, item.result)}</select></div>`;
+    }).join('');
     return `
       <div class="grade-grid">
-        <div class="field-inline"><label>Engineer</label><select data-f="grade.engineer">${selectOpts(ENGINEERS, rec.grade.engineer)}</select></div>
+        <div class="field-inline"><label>Engineer</label><select data-f="grade.engineer">${selectOpts(allEngineerNames(), rec.grade.engineer)}</select></div>
         <div class="field-inline"><label>Status</label><select data-f="grade.status">${selectOpts(GRADE_STAGES, rec.grade.status)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="grade.riskCategory">${selectOpts(RISK_CATEGORIES, rec.grade.riskCategory)}</select></div>
         <div class="field-inline"><label>Documents audited</label><input type="text" data-f="grade.documentsAudited" value="${esc(rec.grade.documentsAudited)}" /></div>
@@ -2730,15 +2937,20 @@ function initTicketPage(payload) {
       </div>
       <div class="subtile">
         <div class="kv-label" style="margin-bottom:8px;">List of tests to approve</div>
-        <div class="subtest-grid">${checkRows}</div>
+        ${gradeFilterControl}
+        <div class="subtest-grid">${checkRows || '<div class="empty-state">No tests in scope for this selection.</div>'}</div>
       </div>
     `;
   }
   function emcTabHtml(rec) {
-    const subRows = rec.emc.subTests.map((st, i) => `
-      <div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${st.code}</span><span class="subtest-name">${esc(st.name)}</span></div>
-      <select data-subtest="${i}">${selectOpts(['Compliant', 'Non-Compliant', 'Test in Progress', 'No Test Required'], st.result)}</select></div>
-    `).join('');
+    const emcFilterControl = testFilterControlHtml('emc', emcTestFilter);
+    const activeEmcSuffix = emcTestFilter !== 'all' ? c.suffixHistory.find(s => s.suffix === emcTestFilter) : null;
+    const visibleSubTests = activeEmcSuffix ? rec.emc.subTests.filter(st => activeEmcSuffix.emcTestsRequired.includes(st.code)) : rec.emc.subTests;
+    const subRows = visibleSubTests.map(st => {
+      const i = rec.emc.subTests.indexOf(st);
+      return `<div class="subtest-row"><div style="display:flex; gap:8px; min-width:0;"><span class="subtest-code">${st.code}</span><span class="subtest-name">${esc(st.name)}</span></div>
+      <select data-subtest="${i}">${selectOpts(['Compliant', 'Non-Compliant', 'Test in Progress', 'No Test Required'], st.result)}</select></div>`;
+    }).join('');
     const docRows = rec.emc.testPlanDocs.map((d, i) => `
       <div class="rr-row">
         <div class="rr-row-head"><strong>${esc(d.name) || 'Document'}</strong><button class="icon-btn" data-emcdoc-rm="${i}">✕</button></div>
@@ -2750,7 +2962,7 @@ function initTicketPage(payload) {
     `).join('') || '<div class="empty-state">No EMC test plan documents uploaded yet.</div>';
     return `
       <div class="grade-grid">
-        <div class="field-inline"><label>Engineer</label><select data-f="emc.engineer">${selectOpts(ENGINEERS, rec.emc.engineer)}</select></div>
+        <div class="field-inline"><label>Engineer</label><select data-f="emc.engineer">${selectOpts(allEngineerNames(), rec.emc.engineer)}</select></div>
         <div class="field-inline"><label>Test plan status</label><select data-f="emc.planStatus">${selectOpts(EMC_PLAN_STAGES, rec.emc.planStatus)}</select></div>
         <div class="field-inline"><label>Test result status (reported state)</label><select data-f="emc.resultStatus">${selectOpts(EMC_RESULT_STAGES, rec.emc.resultStatus)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="emc.riskCategory">${selectOpts(RISK_CATEGORIES, rec.emc.riskCategory)}</select></div>
@@ -2770,7 +2982,8 @@ function initTicketPage(payload) {
 
       <div class="subtile">
         <div class="kv-label" style="margin-bottom:8px;">Summary of test results — change any result to see the reported state update</div>
-        <div class="subtest-grid">${subRows}</div>
+        ${emcFilterControl}
+        <div class="subtest-grid">${subRows || '<div class="empty-state">No tests in scope for this selection.</div>'}</div>
         <div class="kv-label" style="margin-top:14px;">Test report location</div>
         <div class="loc-field">📄 <span class="mono">${esc(rec.emc.testReportLocation)}</span></div>
       </div>
@@ -2780,7 +2993,7 @@ function initTicketPage(payload) {
     const sub = rec[area];
     return `
       <div class="grade-grid">
-        <div class="field-inline"><label>Engineer</label><select data-f="sub.engineer">${selectOpts(ENGINEERS, sub.engineer)}</select></div>
+        <div class="field-inline"><label>Engineer</label><select data-f="sub.engineer">${selectOpts(allEngineerNames(), sub.engineer)}</select></div>
         <div class="field-inline"><label>Status</label><select data-f="sub.status">${selectOpts(stages, sub.status)}</select></div>
         <div class="field-inline"><label>Risk category</label><select data-f="sub.riskCategory">${selectOpts(RISK_CATEGORIES, sub.riskCategory)}</select></div>
         <div class="field-inline"><label>Documents audited</label><input type="text" data-f="sub.documentsAudited" value="${esc(sub.documentsAudited || '')}" /></div>
@@ -2804,7 +3017,7 @@ function initTicketPage(payload) {
     if (!APPROVED_TRIGGER[area](sub)) return false;
     sub.firstApprovalDate = isoDate(TODAY);
     c.changeLog.unshift(makeChangeEntry({
-      partNumberSuffix: c.partNumber.suffix,
+      partNumberSuffix: currentSuffixCodes(c)[0] || c.partNumber.suffix,
       descriptor: `First approved — ${AREA_LABELS[area]} (HW ${sub.hwLevel || '—'} / SW ${sub.swLevel || '—'})`,
       firstApproval: true,
     }));
@@ -2833,6 +3046,10 @@ function initTicketPage(payload) {
     document.querySelectorAll('#ticketTabBody [data-gradecheck]').forEach(el => {
       el.addEventListener('change', () => { rec.grade.checklist[Number(el.dataset.gradecheck)].result = el.value; });
     });
+    const gradeFilterSel = document.getElementById('gradeTestFilterSel');
+    if (gradeFilterSel) gradeFilterSel.addEventListener('change', () => { gradeTestFilter = gradeFilterSel.value; renderTabBody(rec); });
+    const emcFilterSel = document.getElementById('emcTestFilterSel');
+    if (emcFilterSel) emcFilterSel.addEventListener('change', () => { emcTestFilter = emcFilterSel.value; renderTabBody(rec); });
     document.querySelectorAll('#ticketTabBody [data-emcdoc]').forEach(el => {
       const [idx, key] = el.dataset.emcdoc.split('.');
       el.addEventListener('blur', () => { rec.emc.testPlanDocs[Number(idx)][key] = el.value; });
@@ -2855,6 +3072,7 @@ function initTicketPage(payload) {
     return 'No test results';
   }
   function renderRR() {
+    persistTicketChange(c, Object.values(records));
     const wrap = document.getElementById('rrWrap');
     if (!c.rrPlans.length) { wrap.innerHTML = '<div class="empty-state">No R&amp;R plans yet.</div>'; return; }
     wrap.innerHTML = c.rrPlans.map((p, i) => `
@@ -2878,6 +3096,7 @@ function initTicketPage(payload) {
     wrap.querySelectorAll('[data-rr-rm]').forEach(el => el.addEventListener('click', () => { c.rrPlans.splice(Number(el.dataset.rrRm), 1); renderRR(); }));
   }
   function renderDev() {
+    persistTicketChange(c, Object.values(records));
     const wrap = document.getElementById('devWrap');
     if (!c.deviations.length) { wrap.innerHTML = '<div class="empty-state">No deviations yet.</div>'; return; }
     wrap.innerHTML = c.deviations.map((d, i) => `
@@ -2909,6 +3128,10 @@ function initTicketPage(payload) {
     }));
   }
   render();
+  // Safety-net autosave: catches the couple of plain text fields on this page (R&R plan / deviation
+  // rows) that save on blur without re-rendering, plus flushes on tab close.
+  setInterval(() => writeTicketChangeNow(c, Object.values(records)), 2000);
+  window.addEventListener('beforeunload', () => writeTicketChangeNow(c, Object.values(records)));
 }
 
 /* ============================================================
@@ -2950,6 +3173,13 @@ function initApp() {
     naUser = document.getElementById('naUserSel').value;
     renderNextAction();
   });
+  document.getElementById('resetDemoBtn').addEventListener('click', () => {
+    if (!confirm('Clear this browser\'s saved demo data and start over with the original demo dataset? This can\'t be undone.')) return;
+    resettingDemoData = true; // stop the beforeunload autosave below from re-writing over the removed key
+    clearTimeout(mainSaveTimer);
+    localStorage.removeItem(ECAS_STORAGE_KEY);
+    location.reload();
+  });
   document.getElementById('addBrandBtn').addEventListener('click', addBrand);
   document.getElementById('newVlineBtn').addEventListener('click', () => openAddModelYearModal({}));
   document.getElementById('newComponentBtn').addEventListener('click', openNewComponentModal);
@@ -2972,6 +3202,29 @@ function initApp() {
 
   const initialView = (location.hash || '#dashboard').replace('#', '');
   if (['dashboard', 'programme', 'vehicles', 'components', 'vehiclecompliance', 'roadmap'].includes(initialView)) setActiveView(initialView);
+
+  // Re-render every view from the freshly-applied data whenever ANOTHER same-origin tab (the
+  // dashboard reloaded elsewhere, or a component ticket tab) saves a change — this is what makes
+  // "add a component / assign a task over there" show up here without a manual refresh.
+  window.addEventListener('storage', e => {
+    if (e.key !== ECAS_STORAGE_KEY || !e.newValue) return;
+    suppressPersist = true;
+    applySnapshot(loadStoredSnapshot());
+    renderDashboard();
+    renderNextAction();
+    renderProgramme();
+    renderVehicleList();
+    renderVehicleDetail();
+    populateComponentFilters();
+    renderComponentTable();
+    refreshComplianceDetail();
+    suppressPersist = false;
+  });
+  // Safety-net autosave: most edits already save via the render()-embedded persistStore() calls
+  // above, but a couple of plain text fields elsewhere save on blur without re-rendering — this
+  // catches those within a couple of seconds instead of only on next navigation.
+  setInterval(() => { if (!suppressPersist && !resettingDemoData) writeStore(snapshotStore()); }, 2000);
+  window.addEventListener('beforeunload', () => { if (!suppressPersist && !resettingDemoData) writeStore(snapshotStore()); });
 }
 
 /* ============================================================
@@ -2979,11 +3232,24 @@ function initApp() {
    ============================================================ */
 if (location.hash.indexOf('#ticket=') === 0) {
   try {
-    const b64 = location.hash.slice('#ticket='.length);
-    const payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    // Ticket tabs no longer carry a JSON snapshot in the URL — they carry just the componentId
+    // (and optionally a vehicleLineId), and look the component up in THIS tab's own COMPONENTS,
+    // which was just loaded from the browser's saved demo data above. Since that's the same live
+    // object this tab's COMPONENTS/RECORDS arrays hold, edits made here and saved via
+    // persistTicketChange() below are edits to the same dataset the dashboard tab reads.
+    const parts = location.hash.slice('#ticket='.length).split(',').map(decodeURIComponent);
+    const componentId = parts[0];
+    const vehicleLineId = parts[1] || '';
+    const c = COMPONENTS.find(x => x.id === componentId);
+    if (!c) throw new Error('This component isn\'t in this browser\'s saved demo data — it may have been created in a different browser, or "Reset demo data" was used since this link was opened.');
+    const vlIds = c.vehicleLineIds;
+    if (!vlIds.length) throw new Error('This component isn\'t assigned to any vehicle line.');
+    const vlList = vlIds.map(id => VEHICLE_LINES.find(v => v.id === id)).filter(Boolean);
+    const records = vlIds.map(id => getRecord(componentId, id));
+    const payload = { component: c, vehicleLines: vlList, records, initialVline: (vehicleLineId && vlIds.includes(vehicleLineId)) ? vehicleLineId : vlIds[0] };
     initTicketPage(payload);
   } catch (err) {
-    document.body.innerHTML = '<div class="empty-state" style="padding:60px;">Couldn\'t read this ticket link.<br/><span class="mono">' + esc(err.message) + '</span></div>';
+    document.body.innerHTML = '<div class="empty-state" style="padding:60px;">Couldn\'t open this ticket.<br/><span class="mono">' + esc(err.message) + '</span></div>';
   }
 } else {
   initApp();
