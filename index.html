@@ -1859,11 +1859,24 @@ function openAddModelYearModal(preset) {
   function refreshCarryOver(brandId, vlineId) {
     const sel = document.getElementById('myCarryOver');
     sel.innerHTML = '<option value="">None — start empty</option>';
-    if (!brandId || !vlineId || vlineId === '__new__') return;
-    const vl = findVline(brandId, vlineId);
-    if (!vl) return;
-    [...vl.modelYears].reverse().forEach(my => sel.insertAdjacentHTML('beforeend', `<option value="${my.id}">${esc(vl.name)} ${esc(my.label)}</option>`));
-    if (vl.modelYears.length) sel.value = vl.modelYears[vl.modelYears.length - 1].id;
+    // List every model year across every brand/vehicle line in the programme, not just this one —
+    // so a brand-new vehicle line (e.g. a new Defender) can carry over its component list (BOM)
+    // straight from an unrelated line (e.g. an existing Range Rover model year).
+    PROGRAMME.brands.forEach(b => {
+      const opts = [];
+      b.vehicleLines.forEach(vline => {
+        [...vline.modelYears].reverse().forEach(my => {
+          opts.push(`<option value="${my.id}">${esc(vline.name)} ${esc(my.label)}</option>`);
+        });
+      });
+      if (opts.length) sel.insertAdjacentHTML('beforeend', `<optgroup label="${esc(b.name)}">${opts.join('')}</optgroup>`);
+    });
+    // Only auto-preselect when adding another model year onto an existing line — leave it on
+    // "None" when the target is a brand-new vehicle line, so the user picks the source deliberately.
+    if (brandId && vlineId && vlineId !== '__new__') {
+      const vl = findVline(brandId, vlineId);
+      if (vl && vl.modelYears.length) sel.value = vl.modelYears[vl.modelYears.length - 1].id;
+    }
   }
   if (!preset.vehicleLineId) {
     function refreshVlineSelect(brandId) {
@@ -1904,9 +1917,15 @@ function openAddModelYearModal(preset) {
     const carryFrom = document.getElementById('myCarryOver').value;
     if (carryFrom) {
       // Carrying over the component list from a prior model year records that this one is a derivative of it.
-      const sourceMy = vl.modelYears.find(m => m.id === carryFrom);
+      // The source can be any model year on any vehicle line (e.g. copying a Range Rover BOM into a new
+      // Defender line), so search across the whole programme rather than just this vehicle line.
+      let sourceMy = null, sourceVl = null;
+      PROGRAMME.brands.forEach(bb => bb.vehicleLines.forEach(vv => {
+        const found = vv.modelYears.find(m => m.id === carryFrom);
+        if (found) { sourceMy = found; sourceVl = vv; }
+      }));
       newMy.derivedFromMyId = carryFrom;
-      newMy.derivedFromLabel = sourceMy ? sourceMy.label : '';
+      newMy.derivedFromLabel = sourceMy ? (sourceVl && sourceVl.id !== vl.id ? `${sourceVl.name} ${sourceMy.label}` : sourceMy.label) : '';
     }
     rebuildVehicleLines();
     if (carryFrom) {
